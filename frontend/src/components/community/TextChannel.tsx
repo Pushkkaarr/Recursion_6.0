@@ -122,21 +122,40 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
     try {
       setIsSending(true);
       
+      // Log the message data being sent
+      console.log('Sending message with:', { 
+        content: message, 
+        senderName: username,
+        isGuest 
+      });
+      
+      // Get auth token from localStorage if user is logged in
+      const token = !isGuest ? localStorage.getItem('token') : null;
+      
+      // For logged-in mode, we'll not send the senderId at all and let the backend
+      // extract it from the JWT token instead to avoid ObjectId casting issues
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${channelId}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // Include Authorization header for logged-in users
+          ...(token ? {'Authorization': `Bearer ${token}`} : {})
         },
         body: JSON.stringify({
           content: message,
           senderName: username,
-          senderId: userId,
+          // For guest mode only, we'll pass the isGuest flag
           isGuest
+          // We're intentionally not sending senderId to avoid the ObjectId casting error
+          // The backend should extract the user ID from the JWT token for logged-in users
         }),
       });
       
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        // Try to get detailed error from the server
+        const errorData = await response.json().catch(() => null);
+        console.error('Server error response:', errorData, 'Status:', response.status);
+        throw new Error(`Failed to send message: ${errorData?.message || response.statusText}`);
       }
       
       setMessage('');
@@ -155,19 +174,30 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
     const formData = new FormData();
     formData.append('file', file);
     formData.append('senderName', username);
-    if (userId) formData.append('senderId', userId);
+    
+    // Only include isGuest flag, not senderId
     formData.append('isGuest', String(isGuest));
     
     try {
       setIsSending(true);
       
+      // Get auth token if user is logged in
+      const token = !isGuest ? localStorage.getItem('token') : null;
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${channelId}/media`, {
         method: 'POST',
+        headers: {
+          // Include Authorization header for logged-in users
+          ...(token ? {'Authorization': `Bearer ${token}`} : {})
+        },
         body: formData,
       });
       
       if (!response.ok) {
-        throw new Error('Failed to upload file');
+        // Try to get detailed error from the server
+        const errorText = await response.text();
+        console.error('Server error response:', errorText, 'Status:', response.status);
+        throw new Error(`Failed to upload file: ${response.statusText}`);
       }
       
       // Reset file input

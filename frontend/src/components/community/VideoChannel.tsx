@@ -624,11 +624,11 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
             
             {/* Video Grid */}
             <div className={`grid ${getGridClass()} gap-3 h-full`}>
-              {visibleUsers.map((item, index) => (
-                <div key={item.isLocal ? 'local-user' : item.user?.socketId || `remote-${index}`} className="h-full">
-                  {renderVideoTile(item.isLocal, item.user)}
-                </div>
-              ))}
+            {visibleUsers.map((item, index) => (
+  <div key={item.isLocal ? 'local-user' : item.user?.socketId || `remote-${index}`} className="h-full">
+    {renderVideoTile(item.isLocal, item.user ?? null)}
+  </div>
+))}
             </div>
           </div>
         )}
