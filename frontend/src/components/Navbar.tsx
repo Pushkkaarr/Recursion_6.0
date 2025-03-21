@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
 import { Menu, X, MessageCircle } from "lucide-react";
 import Chatbot from "./Chatbot";
 
 const Navbar = () => {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useUser();
+
+  // Generate dashboard link with user ID if available
+  const dashboardLink = user ? `/dashboard/${user.id}` : "/dashboard";
 
   return (
     <>
@@ -32,7 +36,7 @@ const Navbar = () => {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-indigo-300 transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
-              href="/dashboard"
+              href={dashboardLink}
               className="text-white font-medium hover:text-indigo-300 transition-colors duration-200 relative group"
             >
               Dashboard
@@ -89,7 +93,7 @@ const Navbar = () => {
                 Home
               </Link>
               <Link
-                href="/dashboard"
+                href={dashboardLink}
                 onClick={() => setIsMenuOpen(false)}
                 className="text-white font-medium hover:text-indigo-300 transition-colors duration-200"
               >
