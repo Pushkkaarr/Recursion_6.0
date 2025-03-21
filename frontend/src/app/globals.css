@@ -3,7 +3,6 @@
 @plugin "tailwindcss-animate";
 
 @custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -46,74 +45,85 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  /* Light theme - calm educational environment with focus on readability */
+  --background: oklch(0.98 0.003 240);
+  --foreground: oklch(0.2 0.04 265);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.15 0.04 265);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --popover-foreground: oklch(0.15 0.04 265);
+  --primary: oklch(0.55 0.18 230); /* Educational blue */
+  --primary-foreground: oklch(0.98 0.003 240);
+  --secondary: oklch(0.94 0.03 240);
+  --secondary-foreground: oklch(0.4 0.12 230);
+  --muted: oklch(0.96 0.01 240);
+  --muted-foreground: oklch(0.5 0.06 250);
+  --accent: oklch(0.9 0.08 190); /* Soft teal for focus areas */
+  --accent-foreground: oklch(0.2 0.05 265);
+  --destructive: oklch(0.65 0.18 25); /* Softer red for alerts */
+  --destructive-foreground: oklch(0.98 0.003 240);
+  --border: oklch(0.89 0.03 240);
+  --input: oklch(0.89 0.03 240);
+  --ring: oklch(0.6 0.12 230);
+  
+  /* Analytics chart colors - learning progress visualization */
+  --chart-1: oklch(0.65 0.18 145); /* Success/Mastery - Green */
+  --chart-2: oklch(0.6 0.18 200); /* In Progress - Blue */
+  --chart-3: oklch(0.7 0.2 260); /* Needs Review - Purple */
+  --chart-4: oklch(0.75 0.15 55); /* Warning/Practice Needed - Orange */
+  --chart-5: oklch(0.55 0.18 25); /* Critical Attention - Red */
+  
+  --radius: 0.5rem;
+  
+  /* Sidebar for navigation and learning paths */
+  --sidebar: oklch(0.97 0.02 220);
+  --sidebar-foreground: oklch(0.2 0.04 265);
+  --sidebar-primary: oklch(0.55 0.18 230);
+  --sidebar-primary-foreground: oklch(0.98 0.003 240);
+  --sidebar-accent: oklch(0.9 0.08 190);
+  --sidebar-accent-foreground: oklch(0.2 0.05 265);
+  --sidebar-border: oklch(0.89 0.03 240);
+  --sidebar-ring: oklch(0.6 0.12 230);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.129 0.042 264.695);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.129 0.042 264.695);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.984 0.003 247.858);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.279 0.041 260.031);
-  --input: oklch(0.279 0.041 260.031);
-  --ring: oklch(0.446 0.043 257.281);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(0.279 0.041 260.031);
-  --sidebar-ring: oklch(0.446 0.043 257.281);
+  /* Dark theme for night study sessions - reduced eye strain */
+  --background: oklch(0.15 0.03 260);
+  --foreground: oklch(0.95 0.02 240);
+  --card: oklch(0.18 0.03 260);
+  --card-foreground: oklch(0.95 0.02 240);
+  --popover: oklch(0.18 0.03 260);
+  --popover-foreground: oklch(0.95 0.02 240);
+  --primary: oklch(0.6 0.15 230); /* Educational blue - softened for dark mode */
+  --primary-foreground: oklch(0.1 0.02 260);
+  --secondary: oklch(0.25 0.04 260);
+  --secondary-foreground: oklch(0.95 0.02 240);
+  --muted: oklch(0.25 0.04 260);
+  --muted-foreground: oklch(0.7 0.05 250);
+  --accent: oklch(0.5 0.12 190); /* Soft teal for focus areas */
+  --accent-foreground: oklch(0.95 0.02 240);
+  --destructive: oklch(0.5 0.15 25); /* Softer red for alerts */
+  --destructive-foreground: oklch(0.95 0.02 240);
+  --border: oklch(0.3 0.04 260);
+  --input: oklch(0.3 0.04 260);
+  --ring: oklch(0.45 0.1 230);
+  
+  /* Analytics chart colors - learning progress visualization */
+  --chart-1: oklch(0.6 0.15 145); /* Success/Mastery - Green */
+  --chart-2: oklch(0.55 0.15 200); /* In Progress - Blue */
+  --chart-3: oklch(0.65 0.18 260); /* Needs Review - Purple */
+  --chart-4: oklch(0.7 0.18 55); /* Warning/Practice Needed - Orange */
+  --chart-5: oklch(0.6 0.15 25); /* Critical Attention - Red */
+  
+  /* Sidebar for navigation and learning paths */
+  --sidebar: oklch(0.2 0.03 260);
+  --sidebar-foreground: oklch(0.95 0.02 240);
+  --sidebar-primary: oklch(0.6 0.15 230);
+  --sidebar-primary-foreground: oklch(0.1 0.02 260);
+  --sidebar-accent: oklch(0.5 0.12 190);
+  --sidebar-accent-foreground: oklch(0.95 0.02 240);
+  --sidebar-border: oklch(0.3 0.04 260);
+  --sidebar-ring: oklch(0.45 0.1 230);
 }
 
 @layer base {

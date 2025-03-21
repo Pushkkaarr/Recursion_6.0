@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, BarChart2, BookOpen, Clock, ChevronRight, ArrowUpRight } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
 
 const weeklyActivityData = [
   { name: "Mon", progress: 40 },
@@ -73,13 +74,14 @@ const recommendedCourses = [
 ];
 
 export default function Dashboard() {
+  const { user } =useUser()
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, John! Here's an overview of your learning progress.
+          Welcome back, {user?.username || user?.firstName || "User"}! Here's an overview of your learning progress.
           </p>
         </div>
         <div className="flex items-center gap-2">
