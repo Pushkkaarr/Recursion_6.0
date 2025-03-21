@@ -37,19 +37,20 @@ const Navbar = () => {
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
             </Link>
             <Link
-              href="/courses"
-              className="font-medium hover:text-accent transition-colors duration-200 relative group"
-            >
-              Courses
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
-            </Link>
-            <Link
               href={dashboardLink}
               className="font-medium hover:text-accent transition-colors duration-200 relative group"
             >
               Dashboard
               <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
             </Link>
+            <Link
+              href="/teacher"
+              className="font-medium hover:text-accent transition-colors duration-200 relative group"
+            >
+              Teacher
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent transition-all duration-300 group-hover:w-full"></span>
+            </Link>
+            
             <button
               onClick={() => setIsChatbotOpen(true)}
               className="font-medium hover:text-accent transition-colors duration-200 flex items-center space-x-1 relative group"
@@ -101,19 +102,20 @@ const Navbar = () => {
                 Home
               </Link>
               <Link
-                href="/courses"
-                onClick={() => setIsMenuOpen(false)}
-                className="font-medium hover:text-accent transition-colors duration-200"
-              >
-                Courses
-              </Link>
-              <Link
                 href={dashboardLink}
                 onClick={() => setIsMenuOpen(false)}
                 className="font-medium hover:text-accent transition-colors duration-200"
               >
                 Dashboard
               </Link>
+              <Link
+                href="/teacher"
+                onClick={() => setIsMenuOpen(false)}
+                className="font-medium hover:text-accent transition-colors duration-200"
+              >
+                Teacher
+              </Link>
+              
               <button
                 onClick={() => {
                   setIsChatbotOpen(true);

@@ -93,11 +93,11 @@ const pathname = usePathname();
       href: `/dashboard/${userId}/analytics`,
       icon: <BarChart3 size={20} />,
     },
-    // {
-    //   title: 'Community',
-    //   href: `/dashboard/${userId}/community`,
-    //   icon: <Users size={20} />,
-    // },
+    {
+      title: 'Daily Quizzes',
+      href: `/dashboard/${userId}/quiz`,
+      icon: <Users size={20} />,
+    },
     {
       title: 'Messages',
       href: `/dashboard/${userId}/messages`,
