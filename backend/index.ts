@@ -3,8 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db";
 import userRoutes from "./routes/userRoutes"; // Import user routes
-import pool from "./config/db_post" ; // Import Pool from pg
-
+import checkConnection from "./config/db_supa";
 
 dotenv.config();
 
@@ -14,16 +13,9 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB
 connectDB();
 
-// Test PostgreSQL connection
-app.get("/", async (req: Request, res: Response) => {
-  try {
-    const result = await pool.query("SELECT NOW()"); // Simple query to test connection
-    res.send(`PostgreSQL connected! Server time is ${result.rows[0].now}`);
-  } catch (err) {
-    console.error("Error testing PostgreSQL connection:", err);
-    res.status(500).send("Internal Server Error");
-  }
-});
+// Check Supabase connection
+checkConnection();
+
 
 app.use(cors());
 app.use(express.json());
