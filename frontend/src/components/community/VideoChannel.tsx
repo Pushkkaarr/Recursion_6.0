@@ -37,6 +37,7 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
   const [currentPage, setCurrentPage] = useState(0);
   const [peerConnections, setPeerConnections] = useState<Record<string, RTCPeerConnection>>({});
   const [activeUserView, setActiveUserView] = useState<string | null>(null);
+  const [mediaDevicesSupported, setMediaDevicesSupported] = useState(true);
   
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const screenVideoRef = useRef<HTMLVideoElement>(null);
@@ -46,162 +47,233 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
   
   // Connect to socket and set up WebRTC
   useEffect(() => {
-    const newSocket = io(`${process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:5000'}`);
-    
-    // Socket event handlers
-    newSocket.on('connect', async () => {
-      console.log('Connected to socket');
+    const checkMediaDevicesSupport = () => {
+      // Check if we're in a secure context
+      const isSecureContext = window.isSecureContext;
       
+      // Check if mediaDevices API is available
+      const hasMediaDevices = typeof navigator !== 'undefined' && 
+                            navigator.mediaDevices !== undefined;
+      
+      return isSecureContext && hasMediaDevices;
+    };
+
+    const setupCall = async () => {
       try {
-        // Get ICE servers
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/rtc/ice-servers`);
-        if (!response.ok) throw new Error('Failed to get ICE servers');
+        const newSocket = io(`${process.env.NEXT_PUBLIC_WS_URL || 'http://192.168.1.223:5000'}`);
         
-        const { iceServers } = await response.json();
-        
-        // Set up local media stream
-        const constraints = {
-          audio: true,
-          video: showVideo
-        };
-        
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        setLocalStream(stream);
-        
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-        
-        // Join the call with user data
-        newSocket.emit('joinCall', channelId, {
-          username,
-          isGuest,
-          userId,
-          audioEnabled: true,
-          videoEnabled: showVideo
-        });
-        
-        setIsConnecting(false);
-      } catch (err) {
-        console.error('Error setting up media:', err);
-        toast.error('Failed to access camera/microphone. Please check permissions.');
-        setIsConnecting(false);
-      }
-    });
-    
-    // Handle new user joining
-    newSocket.on('userJoined', (userData: any) => {
-      console.log('User joined:', userData);
-      toast.info(`${userData.username} joined the call`);
-      
-      // Create a new peer connection for this user
-      if (localStream) {
-        createPeerConnection(userData.socketId, localStream, newSocket);
-      }
-    });
-    
-    // Handle existing users in the room
-    newSocket.on('existingUsers', (users: any[]) => {
-      console.log('Existing users:', users);
-      
-      // Update remote users state with user information
-      setRemoteUsers(users.map(user => ({
-        socketId: user.socketId,
-        username: user.username,
-        isGuest: user.isGuest,
-        audioEnabled: user.audioEnabled,
-        videoEnabled: user.videoEnabled
-      })));
-      
-      // Create peer connections for all existing users
-      if (localStream) {
-        users.forEach(user => {
-          if (user.socketId !== newSocket.id) {
-            createPeerConnection(user.socketId, localStream, newSocket);
+        newSocket.on('connect', async () => {
+          console.log('Connected to socket');
+          
+          try {
+            // Get ICE servers
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/rtc/ice-servers`);
+            if (!response.ok) throw new Error('Failed to get ICE servers');
+            
+            const { iceServers } = await response.json();
+            
+            // Check if mediaDevices is supported
+            if (!checkMediaDevicesSupport()) {
+              setMediaDevicesSupported(false);
+              throw new Error('MediaDevices API not supported in this browser or context');
+            }
+            
+            // Set up local media stream
+            const constraints = {
+              audio: true,
+              video: showVideo
+            };
+            
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia(constraints);
+              setLocalStream(stream);
+              
+              if (localVideoRef.current) {
+                localVideoRef.current.srcObject = stream;
+              }
+            } catch (mediaError) {
+              console.error('Media access error:', mediaError);
+              
+              // Try only audio if video fails
+              if (showVideo) {
+                try {
+                  const audioOnlyStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                  setLocalStream(audioOnlyStream);
+                  setVideoEnabled(false);
+                  
+                  toast.warning('Camera access denied or not available. Continuing with audio only.');
+                } catch (audioError) {
+                  console.error('Audio-only access error:', audioError);
+                  toast.error('Microphone access denied. You will be in listen-only mode.');
+                }
+              }
+            }
+            
+            // Join the call with user data
+            newSocket.emit('joinCall', channelId, {
+              username,
+              isGuest,
+              userId,
+              audioEnabled: true,
+              videoEnabled: showVideo && videoEnabled
+            });
+            
+            setIsConnecting(false);
+          } catch (err) {
+            console.error('Error setting up media:', err);
+            
+            // More specific error handling
+            if (err instanceof Error) {
+              if (err.message === 'MediaDevices API not supported in this browser or context') {
+                toast.error('Video/audio calling is not supported in this browser or context. This may be because you are not using HTTPS.', { 
+                  duration: 6000 
+                });
+              } else if (err.message.includes('Permission denied') || err.name === 'NotAllowedError') {
+                toast.error('Camera/microphone access denied. Please check permissions.');
+              } else if (err.name === 'NotFoundError') {
+                toast.error('No camera or microphone found. Please check your device.');
+              } else {
+                toast.error('Failed to access camera/microphone. Please check permissions.');
+              }
+            } else {
+              toast.error('An unknown error occurred while setting up media.');
+            }
+            
+            // Allow user to continue with limited functionality
+            setIsConnecting(false);
+            
+            // Join the call without media
+            newSocket.emit('joinCall', channelId, {
+              username,
+              isGuest,
+              userId,
+              audioEnabled: false,
+              videoEnabled: false
+            });
           }
         });
+        
+        // Handle new user joining
+        newSocket.on('userJoined', (userData: any) => {
+          console.log('User joined:', userData);
+          toast.info(`${userData.username} joined the call`);
+          
+          // Create a new peer connection for this user
+          if (localStream) {
+            createPeerConnection(userData.socketId, localStream, newSocket);
+          }
+        });
+        
+        // Handle existing users in the room
+        newSocket.on('existingUsers', (users: any[]) => {
+          console.log('Existing users:', users);
+          
+          // Update remote users state with user information
+          setRemoteUsers(users.map(user => ({
+            socketId: user.socketId,
+            username: user.username,
+            isGuest: user.isGuest,
+            audioEnabled: user.audioEnabled,
+            videoEnabled: user.videoEnabled
+          })));
+          
+          // Create peer connections for all existing users
+          if (localStream) {
+            users.forEach(user => {
+              if (user.socketId !== newSocket.id) {
+                createPeerConnection(user.socketId, localStream, newSocket);
+              }
+            });
+          }
+        });
+        
+        // Handle user media state changes
+        newSocket.on('mediaStateChange', (socketId: string, state: any) => {
+          setRemoteUsers(prev => 
+            prev.map(user => 
+              user.socketId === socketId 
+                ? { ...user, ...state } 
+                : user
+            )
+          );
+        });
+        
+        // Handle WebRTC signaling
+        newSocket.on('offer', async (offer: RTCSessionDescriptionInit, from: string) => {
+          console.log('Received offer from:', from);
+          
+          if (!peerConnections[from] && localStream) {
+            createPeerConnection(from, localStream, newSocket);
+          }
+          
+          const pc = peerConnections[from];
+          if (pc) {
+            await pc.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            newSocket.emit('answer', answer, from);
+          }
+        });
+        
+        newSocket.on('answer', (answer: RTCSessionDescriptionInit, from: string) => {
+          console.log('Received answer from:', from);
+          const pc = peerConnections[from];
+          if (pc) {
+            pc.setRemoteDescription(new RTCSessionDescription(answer));
+          }
+        });
+        
+        newSocket.on('ice-candidate', (candidate: RTCIceCandidateInit, from: string) => {
+          console.log('Received ICE candidate from:', from);
+          const pc = peerConnections[from];
+          if (pc) {
+            pc.addIceCandidate(new RTCIceCandidate(candidate));
+          }
+        });
+        
+        // Handle user leaving
+        newSocket.on('userLeft', (socketId: string) => {
+          console.log('User left:', socketId);
+          
+          // Close and remove the peer connection
+          if (peerConnections[socketId]) {
+            peerConnections[socketId].close();
+            const newConnections = { ...peerConnections };
+            delete newConnections[socketId];
+            setPeerConnections(newConnections);
+          }
+          
+          // Remove the user from remoteUsers
+          setRemoteUsers(prev => prev.filter(user => user.socketId !== socketId));
+          
+          // If showing the focused view of a user who left, reset to grid view
+          if (activeUserView === socketId) {
+            setActiveUserView(null);
+          }
+          
+          toast.info('A user left the call');
+        });
+        
+        // Handle whiteboard data
+        newSocket.on('whiteboardData', (data: any) => {
+          // Handle whiteboard data from other users
+          console.log('Received whiteboard data:', data);
+        });
+        
+        // Handle disconnection
+        newSocket.on('disconnect', () => {
+          console.log('Disconnected from socket');
+        });
+        
+        setSocket(newSocket);
+      } catch (error) {
+        console.error('Socket setup error:', error);
+        setIsConnecting(false);
+        toast.error('Failed to connect to the call. Please try again later.');
       }
-    });
-    
-    // Handle user media state changes
-    newSocket.on('mediaStateChange', (socketId: string, state: any) => {
-      setRemoteUsers(prev => 
-        prev.map(user => 
-          user.socketId === socketId 
-            ? { ...user, ...state } 
-            : user
-        )
-      );
-    });
-    
-    // Handle WebRTC signaling
-    newSocket.on('offer', async (offer: RTCSessionDescriptionInit, from: string) => {
-      console.log('Received offer from:', from);
-      
-      if (!peerConnections[from] && localStream) {
-        createPeerConnection(from, localStream, newSocket);
-      }
-      
-      const pc = peerConnections[from];
-      if (pc) {
-        await pc.setRemoteDescription(new RTCSessionDescription(offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        newSocket.emit('answer', answer, from);
-      }
-    });
-    
-    newSocket.on('answer', (answer: RTCSessionDescriptionInit, from: string) => {
-      console.log('Received answer from:', from);
-      const pc = peerConnections[from];
-      if (pc) {
-        pc.setRemoteDescription(new RTCSessionDescription(answer));
-      }
-    });
-    
-    newSocket.on('ice-candidate', (candidate: RTCIceCandidateInit, from: string) => {
-      console.log('Received ICE candidate from:', from);
-      const pc = peerConnections[from];
-      if (pc) {
-        pc.addIceCandidate(new RTCIceCandidate(candidate));
-      }
-    });
-    
-    // Handle user leaving
-    newSocket.on('userLeft', (socketId: string) => {
-      console.log('User left:', socketId);
-      
-      // Close and remove the peer connection
-      if (peerConnections[socketId]) {
-        peerConnections[socketId].close();
-        const newConnections = { ...peerConnections };
-        delete newConnections[socketId];
-        setPeerConnections(newConnections);
-      }
-      
-      // Remove the user from remoteUsers
-      setRemoteUsers(prev => prev.filter(user => user.socketId !== socketId));
-      
-      // If showing the focused view of a user who left, reset to grid view
-      if (activeUserView === socketId) {
-        setActiveUserView(null);
-      }
-      
-      toast.info('A user left the call');
-    });
-    
-    // Handle whiteboard data
-    newSocket.on('whiteboardData', (data: any) => {
-      // Handle whiteboard data from other users
-      console.log('Received whiteboard data:', data);
-    });
-    
-    // Handle disconnection
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from socket');
-    });
-    
-    setSocket(newSocket);
+    };
+
+    setupCall();
     
     // Cleanup on unmount
     return () => {
@@ -219,8 +291,8 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
       }
       
       // Disconnect socket
-      if (newSocket) {
-        newSocket.disconnect();
+      if (socket) {
+        socket.disconnect();
       }
     };
   }, [channelId, username, isGuest, userId, showVideo]);
@@ -233,6 +305,11 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
       if (!response.ok) throw new Error('Failed to get ICE servers');
       
       const { iceServers } = await response.json();
+      
+      // Check if RTCPeerConnection is supported
+      if (typeof RTCPeerConnection === 'undefined') {
+        throw new Error('WebRTC is not supported in this browser');
+      }
       
       const pc = new RTCPeerConnection({ iceServers });
       
@@ -350,6 +427,11 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
         }
         setIsScreenSharing(false);
       } else {
+        // Check if mediaDevices is supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+          throw new Error('Screen sharing is not supported in this browser or context');
+        }
+        
         // Start screen sharing
         const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         setScreenStream(stream);
@@ -375,7 +457,18 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
       }
     } catch (error) {
       console.error('Error toggling screen share:', error);
-      toast.error('Failed to share screen. Please try again.');
+      
+      if (error instanceof Error) {
+        if (error.message === 'Screen sharing is not supported in this browser or context') {
+          toast.error('Screen sharing is not supported in this browser. Please use a modern browser with HTTPS.');
+        } else if (error.name === 'NotAllowedError') {
+          toast.error('Permission to share screen was denied.');
+        } else {
+          toast.error('Failed to share screen. Please try again.');
+        }
+      } else {
+        toast.error('Failed to share screen. Please try again.');
+      }
     }
   };
   
@@ -518,6 +611,132 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
       </div>
     );
   };
+
+  // Render instructions for enabling secure context
+  const renderMediaNotSupported = () => {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-4">
+        <div className="bg-[#2A2A30] p-6 rounded-lg max-w-md">
+          <VideoOff size={40} className="mx-auto text-[#ED4245] mb-4" />
+          <h3 className="text-xl font-medium mb-2">Camera/Microphone Access Not Available</h3>
+          <p className="text-[#B5BAC1] mb-4">
+            Your browser can't access your camera or microphone. This is usually because:
+          </p>
+          <ul className="text-left text-[#B5BAC1] mb-4 space-y-2 list-disc pl-5">
+            <li>You're not using a secure connection (HTTPS)</li>
+            <li>You're using an older browser that doesn't support WebRTC</li>
+            <li>Camera/microphone permissions are blocked</li>
+          </ul>
+          <div className="space-y-3">
+            <p className="text-[#B5BAC1] font-medium">Try these solutions:</p>
+            <div className="bg-[#36363C] p-3 rounded text-left">
+              <p className="text-sm text-[#B5BAC1] mb-1 font-medium">If you're running locally:</p>
+              <p className="text-xs text-[#B5BAC1]">Use <code className="bg-[#202225] px-1 py-0.5 rounded">localhost</code> instead of an IP address</p>
+            </div>
+            <div className="bg-[#36363C] p-3 rounded text-left">
+              <p className="text-sm text-[#B5BAC1] mb-1 font-medium">For deployment:</p>
+              <p className="text-xs text-[#B5BAC1]">Ensure your site uses HTTPS</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Render function for the connected/non-connected state
+  const renderContent = () => {
+    if (isConnecting) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <Loader className="w-8 h-8 text-[#5865F2] animate-spin mb-2" />
+          <p className="text-[#B5BAC1]">Connecting to call...</p>
+        </div>
+      );
+    } else if (!mediaDevicesSupported) {
+      return renderMediaNotSupported();
+    } else if (showWhiteboard) {
+      return (
+        <div className="h-full flex flex-col relative">
+          <button
+            onClick={() => setShowWhiteboard(false)}
+            className="absolute top-2 right-2 bg-[#4E5058] rounded-full p-1.5 shadow-md hover:bg-[#6D6F78] z-10"
+          >
+            <X size={16} />
+          </button>
+          <Whiteboard channelId={channelId} socket={socket} />
+        </div>
+      );
+    } else {
+      return (
+        <div className="h-full flex flex-col">
+          {/* Screen Share (if active) */}
+          {isScreenSharing && screenStream && (
+            <div className="relative bg-black rounded-lg overflow-hidden shadow-md mb-4 h-2/5">
+              <video
+                ref={screenVideoRef}
+                autoPlay
+                playsInline
+                className="w-full h-full object-contain"
+              />
+              <div className="absolute top-2 right-2">
+                <button 
+                  className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full text-white hover:bg-black/70 transition-colors"
+                  onClick={() => setIsScreenSharing(false)}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-white text-sm">
+                Screen Share - {username}
+              </div>
+            </div>
+          )}
+          
+          {/* Pagination controls - only show if needed */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mb-3 items-center space-x-3">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 0}
+                className={`rounded-full p-1.5 transition-colors ${
+                  currentPage === 0 
+                    ? 'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' 
+                    : 'bg-[#4E5058] text-white hover:bg-[#6D6F78]'
+                }`}
+                aria-label="Previous page"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div className="text-[#B5BAC1] text-sm">
+                {currentPage + 1} / {totalPages}
+              </div>
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages - 1}
+                className={`rounded-full p-1.5 transition-colors ${
+                  currentPage === totalPages - 1 
+                    ? 'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' 
+                    : 'bg-[#4E5058] text-white hover:bg-[#6D6F78]'
+                }`}
+                aria-label="Next page"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </div>
+          )}
+          
+          {/* Video Grid */}
+          <div className={`grid ${getGridClass()} gap-3 h-full`}>
+            {visibleUsers.map((item, index) => (
+              <div key={item.isLocal ? 'local-user' : item.user?.socketId || `remote-${index}`} className="h-full">
+                {renderVideoTile(item.isLocal, item.user ?? undefined)}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+  };
   
   return (
     <div className="flex flex-col h-full bg-[#313338] text-white">
@@ -549,89 +768,7 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
       
       {/* Main Content Area */}
       <div className="flex-1 p-4 overflow-hidden relative bg-[#313338]">
-        {isConnecting ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <Loader className="w-8 h-8 text-[#5865F2] animate-spin mb-2" />
-            <p className="text-[#B5BAC1]">Connecting to call...</p>
-          </div>
-        ) : showWhiteboard ? (
-          <div className="h-full flex flex-col relative">
-            <button
-              onClick={() => setShowWhiteboard(false)}
-              className="absolute top-2 right-2 bg-[#4E5058] rounded-full p-1.5 shadow-md hover:bg-[#6D6F78] z-10"
-            >
-              <X size={16} />
-            </button>
-            <Whiteboard channelId={channelId} socket={socket} />
-          </div>
-        ) : (
-          <div className="h-full flex flex-col">
-            {/* Screen Share (if active) */}
-            {isScreenSharing && screenStream && (
-              <div className="relative bg-black rounded-lg overflow-hidden shadow-md mb-4 h-2/5">
-                <video
-                  ref={screenVideoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-contain"
-                />
-                <div className="absolute top-2 right-2">
-                  <button 
-                    className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full text-white hover:bg-black/70 transition-colors"
-                    onClick={() => setIsScreenSharing(false)}
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-white text-sm">
-                  Screen Share - {username}
-                </div>
-              </div>
-            )}
-            
-            {/* Pagination controls - only show if needed */}
-            {totalPages > 1 && (
-              <div className="flex justify-center mb-3 items-center space-x-3">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 0}
-                  className={`rounded-full p-1.5 transition-colors ${
-                    currentPage === 0 
-                      ? 'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' 
-                      : 'bg-[#4E5058] text-white hover:bg-[#6D6F78]'
-                  }`}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <div className="text-[#B5BAC1] text-sm">
-                  {currentPage + 1} / {totalPages}
-                </div>
-                <button
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages - 1}
-                  className={`rounded-full p-1.5 transition-colors ${
-                    currentPage === totalPages - 1 
-                      ? 'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' 
-                      : 'bg-[#4E5058] text-white hover:bg-[#6D6F78]'
-                  }`}
-                  aria-label="Next page"
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </div>
-            )}
-            
-            {/* Video Grid */}
-            <div className={`grid ${getGridClass()} gap-3 h-full`}>
-            {visibleUsers.map((item, index) => (
-  <div key={item.isLocal ? 'local-user' : item.user?.socketId || `remote-${index}`} className="h-full">
-    {renderVideoTile(item.isLocal, item.user ?? null)}
-  </div>
-))}
-            </div>
-          </div>
-        )}
+        {renderContent()}
       </div>
       
       {/* Call Controls */}
@@ -639,7 +776,9 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
         <div className="flex space-x-3">
           <button
             onClick={toggleAudio}
+            disabled={!localStream || !mediaDevicesSupported}
             className={`p-3 rounded-full transition-colors ${
+              !localStream || !mediaDevicesSupported ? 'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' :
               audioEnabled 
                 ? 'bg-[#4E5058] hover:bg-[#6D6F78] text-white' 
                 : 'bg-[#ED4245] hover:bg-[#ED4245]/80 text-white'
@@ -652,7 +791,9 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
           {showVideo && (
             <button
               onClick={toggleVideo}
+              disabled={!localStream}
               className={`p-3 rounded-full transition-colors ${
+                !localStream ? 'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' :
                 videoEnabled 
                   ? 'bg-[#4E5058] hover:bg-[#6D6F78] text-white' 
                   : 'bg-[#ED4245] hover:bg-[#ED4245]/80 text-white'
@@ -665,7 +806,10 @@ export default function VideoChannel({ channelId, channelName, username, isGuest
           
           <button
             onClick={toggleScreenSharing}
+            disabled={!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia}
             className={`p-3 rounded-full transition-colors ${
+              !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia ? 
+                'bg-[#4E5058]/30 text-[#B5BAC1]/50 cursor-not-allowed' :
               isScreenSharing
                 ? 'bg-[#5865F2] hover:bg-[#5865F2]/80 text-white'
                 : 'bg-[#4E5058] hover:bg-[#6D6F78] text-white'
