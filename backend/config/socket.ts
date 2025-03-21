@@ -1,15 +1,28 @@
+// config/socket.ts
 
-import { Server as SocketIOServer } from 'socket.io';
-import http from 'http';
-import { IMessage } from '../models/Message';
+import { Server as SocketServer } from 'socket.io';
+import { Server as HttpServer } from 'http';
+import { v4 as uuidv4 } from 'uuid';
 
-let io: SocketIOServer;
+// Active rooms and their participants
+const rooms: {
+  [key: string]: {
+    participants: {
+      [socketId: string]: {
+        userId?: string;
+        username: string;
+        peerId?: string;
+      };
+    };
+    activeCall: boolean;
+  };
+} = {};
 
-export const initializeSocket = (server: http.Server): void => {
-  io = new SocketIOServer(server, {
+export const initializeSocket = (server: HttpServer): void => {
+  const io = new SocketServer(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
-      methods: ["GET", "POST"],
+      origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+      methods: ['GET', 'POST'],
       credentials: true
     }
   });
@@ -18,87 +31,160 @@ export const initializeSocket = (server: http.Server): void => {
     console.log('User connected:', socket.id);
 
     // Join a channel room
-    socket.on('joinChannel', (channelId: string) => {
+    socket.on('join-channel', ({ channelId, userId, username }) => {
       socket.join(channelId);
-      console.log(`Socket ${socket.id} joined channel ${channelId}`);
+      
+      // Initialize room if it doesn't exist
+      if (!rooms[channelId]) {
+        rooms[channelId] = {
+          participants: {},
+          activeCall: false
+        };
+      }
+      
+      // Add participant to room
+      rooms[channelId].participants[socket.id] = {
+        userId,
+        username,
+      };
+      
+      // Broadcast to all users in the channel that a new user has joined
+      io.to(channelId).emit('user-joined', {
+        socketId: socket.id,
+        userId,
+        username,
+        participants: rooms[channelId].participants
+      });
+      
+      // Send existing participants to the new user
+      socket.emit('channel-participants', rooms[channelId].participants);
+      
+      console.log(`${username} joined channel: ${channelId}`);
     });
 
     // Leave a channel room
-    socket.on('leaveChannel', (channelId: string) => {
-      socket.leave(channelId);
-      console.log(`Socket ${socket.id} left channel ${channelId}`);
+    socket.on('leave-channel', ({ channelId }) => {
+      if (rooms[channelId] && rooms[channelId].participants[socket.id]) {
+        const username = rooms[channelId].participants[socket.id].username;
+        
+        // Notify others that user has left
+        socket.to(channelId).emit('user-left', {
+          socketId: socket.id,
+          username
+        });
+        
+        // Remove user from participants
+        delete rooms[channelId].participants[socket.id];
+        socket.leave(channelId);
+        
+        console.log(`${username} left channel: ${channelId}`);
+        
+        // Clean up empty rooms
+        if (Object.keys(rooms[channelId].participants).length === 0) {
+          delete rooms[channelId];
+        }
+      }
     });
 
-    // Join a video/voice call
-    socket.on('joinCall', (channelId: string, userData: any) => {
-      const roomUsers = getRoomUsers(channelId);
-      
-      // Notify others in the room that a new user joined
-      socket.to(channelId).emit('userJoined', userData);
-      
-      // Send the list of existing users to the newly joined user
-      socket.emit('existingUsers', roomUsers);
-      
-      // Join the socket to the channel room
-      socket.join(channelId);
-      console.log(`Socket ${socket.id} joined call in channel ${channelId}`);
+    // New message in a channel
+    socket.on('send-message', (message) => {
+      // Broadcast message to all users in the channel
+      socket.to(message.channelId).emit('new-message', message);
     });
 
-    // WebRTC signaling
-    socket.on('offer', (offer: any, to: string) => {
-      socket.to(to).emit('offer', offer, socket.id);
+    // Whiteboard updates
+    socket.on('whiteboard-update', ({ channelId, data }) => {
+      // Broadcast whiteboard updates to all users in the channel except sender
+      socket.to(channelId).emit('whiteboard-updated', data);
     });
 
-    socket.on('answer', (answer: any, to: string) => {
-      socket.to(to).emit('answer', answer, socket.id);
+    // WebRTC Signaling
+    
+    // Start a call in a channel
+    socket.on('start-call', ({ channelId, type }) => {
+      if (rooms[channelId]) {
+        rooms[channelId].activeCall = true;
+        io.to(channelId).emit('call-started', { 
+          channelId, 
+          initiator: socket.id,
+          type // 'voice' or 'video'
+        });
+      }
+    });
+    
+    // End a call in a channel
+    socket.on('end-call', ({ channelId }) => {
+      if (rooms[channelId]) {
+        rooms[channelId].activeCall = false;
+        io.to(channelId).emit('call-ended', { channelId });
+      }
+    });
+    
+    // WebRTC signaling - offer
+    socket.on('rtc-offer', ({ channelId, to, from, offer }) => {
+      socket.to(to).emit('rtc-offer', {
+        channelId,
+        from,
+        offer
+      });
+    });
+    
+    // WebRTC signaling - answer
+    socket.on('rtc-answer', ({ channelId, to, from, answer }) => {
+      socket.to(to).emit('rtc-answer', {
+        channelId,
+        from,
+        answer
+      });
+    });
+    
+    // WebRTC signaling - ICE candidate
+    socket.on('ice-candidate', ({ channelId, to, candidate }) => {
+      socket.to(to).emit('ice-candidate', {
+        channelId,
+        candidate
+      });
+    });
+    
+    // Screen sharing
+    socket.on('start-screen-share', ({ channelId }) => {
+      socket.to(channelId).emit('user-screen-share', {
+        socketId: socket.id,
+        isSharing: true
+      });
+    });
+    
+    socket.on('stop-screen-share', ({ channelId }) => {
+      socket.to(channelId).emit('user-screen-share', {
+        socketId: socket.id,
+        isSharing: false
+      });
     });
 
-    socket.on('ice-candidate', (candidate: any, to: string) => {
-      socket.to(to).emit('ice-candidate', candidate, socket.id);
-    });
-
-    // Whiteboard events
-    socket.on('whiteboardData', (channelId: string, data: any) => {
-      socket.to(channelId).emit('whiteboardData', data);
-    });
-
-    // Disconnection
+    // Handle disconnection
     socket.on('disconnect', () => {
       console.log('User disconnected:', socket.id);
-      // Notify all rooms this socket was in that the user disconnected
-      socket.rooms.forEach(room => {
-        if (room !== socket.id) {
-          socket.to(room).emit('userLeft', socket.id);
+      
+      // Remove user from all channels they were part of
+      Object.keys(rooms).forEach(channelId => {
+        if (rooms[channelId].participants[socket.id]) {
+          const username = rooms[channelId].participants[socket.id].username;
+          
+          // Notify others in the channel
+          socket.to(channelId).emit('user-left', {
+            socketId: socket.id,
+            username
+          });
+          
+          // Remove from participants
+          delete rooms[channelId].participants[socket.id];
+          
+          // Clean up empty rooms
+          if (Object.keys(rooms[channelId].participants).length === 0) {
+            delete rooms[channelId];
+          }
         }
       });
     });
   });
-
-  console.log('Socket.io initialized');
 };
-
-// Helper to get users in a room
-const getRoomUsers = (roomId: string): string[] => {
-  if (!io) return [];
-  
-  const room = io.sockets.adapter.rooms.get(roomId);
-  if (!room) return [];
-  
-  return Array.from(room);
-};
-
-// Method to emit a new message to channel subscribers
-export const emitNewMessage = (channelId: string, message: IMessage): void => {
-  if (io) {
-    io.to(channelId).emit('newMessage', message);
-  }
-};
-
-// Method to emit channel updates
-export const emitChannelUpdate = (channelId: string, updateType: 'created' | 'updated' | 'deleted', data?: any): void => {
-  if (io) {
-    io.emit('channelUpdate', { channelId, type: updateType, data });
-  }
-};
-
-export default io;
