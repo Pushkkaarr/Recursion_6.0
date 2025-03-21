@@ -87,7 +87,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="gap-1">
             <CalendarDays size={16} />
-            June 2023
+            March 2025
           </Button>
           <Button size="sm" className="gap-1">
             <BarChart2 size={16} />
