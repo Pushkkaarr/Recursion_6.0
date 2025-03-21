@@ -2,6 +2,24 @@
 
 import { useState, useRef } from "react";
 import { jsPDF } from "jspdf";
+import { 
+  Camera, 
+  Upload, 
+  X, 
+  FileDown, 
+  Loader2, 
+  BookOpen,
+  ScanSearch,
+  CheckCircle
+} from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export default function QuestionScanner() {
   const [solution, setSolution] = useState(null);
@@ -19,6 +37,13 @@ export default function QuestionScanner() {
   const addLog = (message) => {
     console.log(message);
     setLogs((prev) => [...prev, `${new Date().toLocaleTimeString()} - ${message}`]);
+    
+    // Also show important messages as toasts
+    if (message.includes("successfully") || message.includes("Error")) {
+      toast(message, {
+        icon: message.includes("Error") ? "🚫" : "✅"
+      });
+    }
   };
 
   // Handle image file upload
@@ -32,7 +57,7 @@ export default function QuestionScanner() {
       processImage(file);
     } else {
       addLog("Error: Invalid file type. Please upload an image.");
-      alert("Please upload a valid image file (e.g., PNG, JPG).");
+      toast.error("Please upload a valid image file (e.g., PNG, JPG).");
     }
   };
 
@@ -54,7 +79,7 @@ export default function QuestionScanner() {
       }
     } catch (error) {
       addLog(`Error starting camera: ${error instanceof Error ? error.message : "Unknown error"}`);
-      alert("Failed to access camera. Please allow permissions.");
+      toast.error("Failed to access camera. Please allow permissions.");
     }
   };
 
@@ -154,6 +179,7 @@ export default function QuestionScanner() {
     } catch (error) {
       addLog(`Error fetching Gemini solution: ${error instanceof Error ? error.message : "Unknown error"}`);
       setSolution("Failed to generate solution. Please try again.");
+      toast.error("Failed to generate solution. Please try again.");
     } finally {
       setIsLoading(false);
       addLog("Solution generation process completed.");
@@ -222,9 +248,11 @@ export default function QuestionScanner() {
       const generatedPlan = data.candidates[0].content.parts[0].text;
       addLog("Study plan generated successfully.");
       setStudyPlan(generatedPlan);
+      toast.success("Study plan generated successfully!");
     } catch (error) {
       addLog(`Error generating study plan: ${error instanceof Error ? error.message : "Unknown error"}`);
       setStudyPlan("Failed to generate study plan. Please try again.");
+      toast.error("Failed to generate study plan. Please try again.");
     } finally {
       setIsPlanLoading(false);
       addLog("Study plan generation completed.");
@@ -242,7 +270,7 @@ export default function QuestionScanner() {
       if (line.trim().startsWith("- ") || line.trim().startsWith("* ")) {
         const content = line.trim().substring(2);
         return (
-          <li key={index} className="ml-4 list-disc">
+          <li key={index} className="ml-6 list-disc mb-1">
             {content}
           </li>
         );
@@ -255,11 +283,11 @@ export default function QuestionScanner() {
           const level = content.match(/^#+/)[0].length;
           content = content.substring(level + 1).trim();
           return level <= 3 ? (
-            <h3 key={index} className="font-bold text-lg mt-4 mb-2">
+            <h3 key={index} className="font-bold text-lg mt-5 mb-3 text-primary">
               {content}
             </h3>
           ) : (
-            <h4 key={index} className="font-semibold text-md mt-2 mb-1">
+            <h4 key={index} className="font-semibold text-md mt-3 mb-2 text-primary/80">
               {content}
             </h4>
           );
@@ -273,18 +301,31 @@ export default function QuestionScanner() {
         }
       }
 
+      // Handle numbered lists (e.g., "1. ")
+      if (line.trim().match(/^\d+\.\s/)) {
+        const content = line.trim().replace(/^\d+\.\s/, "");
+        return (
+          <li key={index} className="ml-6 list-decimal mb-1">
+            {content}
+          </li>
+        );
+      }
+
       // Handle emoji indicators
       if (line.match(/^[📌📊📅📖🔥]/)) {
         return (
-          <p key={index} className="mb-2 font-semibold">
-            {line}
+          <p key={index} className="mb-3 font-semibold flex items-center">
+            <Badge variant="outline" className="mr-2 py-1 px-2">
+              {line.substring(0, 1)}
+            </Badge>
+            {line.substring(1)}
           </p>
         );
       }
 
       // Regular paragraph
       return (
-        <p key={index} className="mb-2">
+        <p key={index} className="mb-3">
           {line}
         </p>
       );
@@ -302,176 +343,270 @@ export default function QuestionScanner() {
     doc.setFontSize(16);
     doc.text(filename === "study-plan.pdf" ? "Smart Study Plan" : "Question Solution", 10, 10);
     doc.setFontSize(12);
-    doc.text(content, 10, 20, { maxWidth: 180 });
+    
+    const textLines = content.split('\n');
+    let yPosition = 20;
+    
+    textLines.forEach(line => {
+      // Skip empty lines
+      if (line.trim() === '') return;
+      
+      // Handle different line types
+      if (line.trim().startsWith('#')) {
+        doc.setFontSize(14);
+        doc.setFont(undefined, 'bold');
+        doc.text(line.replace(/^#+\s/, ''), 10, yPosition);
+        doc.setFontSize(12);
+        doc.setFont(undefined, 'normal');
+      } else {
+        const wrappedText = doc.splitTextToSize(line, 180);
+        doc.text(wrappedText, 10, yPosition);
+        yPosition += 5 * wrappedText.length;
+        return;
+      }
+      
+      yPosition += 8;
+    });
+    
     doc.save(filename);
     addLog(`${filename} downloaded successfully.`);
+    toast.success(`${filename} downloaded successfully.`);
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      {/* Tab Navigation */}
-      <div className="flex mb-4 border-b">
-        <button
-          onClick={() => setActiveTab("scanner")}
-          className={`px-4 py-2 ${
-            activeTab === "scanner"
-              ? "border-b-2 border-blue-500 text-blue-600 font-semibold"
-              : "text-gray-600"
-          }`}
-        >
-          Question Scanner
-        </button>
-        <button
-          onClick={() => setActiveTab("planner")}
-          className={`px-4 py-2 ${
-            activeTab === "planner"
-              ? "border-b-2 border-blue-500 text-blue-600 font-semibold"
-              : "text-gray-600"
-          }`}
-        >
-          Smart Study Planner
-        </button>
-      </div>
-
-      {/* Question Scanner Section */}
-      {activeTab === "scanner" && (
-        <>
-          {/* Image Input Options */}
-          {!imageSrc && (
-            <div className="mb-4">
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <button
-                onClick={triggerFileInput}
-                className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 mr-2"
-              >
-                Upload Image
-              </button>
-              <button
-                onClick={startCamera}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Use Camera
-              </button>
-              <p className="text-sm text-gray-600 mt-2">
-                Upload an image or use your camera to scan a question.
-              </p>
-            </div>
-          )}
-
-          {/* Camera Preview */}
-          {!imageSrc && videoRef.current?.srcObject && (
-            <div className="mb-4">
-              <video ref={videoRef} className="w-full rounded-lg shadow-md" />
-              <button
-                onClick={captureImage}
-                className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                Capture
-              </button>
-              <button
-                onClick={stopCamera}
-                className="mt-2 ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Stop Camera
-              </button>
-              <canvas ref={canvasRef} className="hidden" />
-            </div>
-          )}
-
-          {/* Display Captured/Uploaded Image */}
-          {imageSrc && (
-            <div className="mb-4">
-              <img src={imageSrc} alt="Question" className="w-full rounded-lg shadow-md" />
-              <button
-                onClick={() => {
-                  setImageSrc(null);
-                  setSolution(null);
-                }}
-                className="mt-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-              >
-                Clear Image
-              </button>
-            </div>
-          )}
-
-          {/* Loading Indicator */}
-          {isLoading && (
-            <div className="flex items-center justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-              <span className="ml-2">Generating solution...</span>
-            </div>
-          )}
-
-          {/* Display Solution */}
-          {solution && (
-            <div className="mt-4 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Solution</h3>
-              <div className="text-gray-700 leading-relaxed">
-                {formatText(solution)}
-              </div>
-              <button
-                onClick={() => downloadPDF(solution, "question-solution.pdf")}
-                className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-              >
-                Download Solution as PDF
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Smart Study Planner Section */}
-      {activeTab === "planner" && (
-        <div>
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-4">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">Smart Study Planner</h3>
-            <p className="text-gray-600 mb-4">
-              Get a personalized study plan based on your attendance and quiz performance. Our AI will analyze your data and create a tailored study schedule for the upcoming week.
-            </p>
-            <button
-              onClick={generateStudyPlan}
-              disabled={isPlanLoading}
-              className={`px-4 py-2 ${
-                isPlanLoading 
-                  ? "bg-gray-400" 
-                  : "bg-indigo-600 hover:bg-indigo-700"
-              } text-white rounded transition-colors`}
-            >
-              {isPlanLoading ? "Generating..." : "Generate Study Plan"}
-            </button>
+    <div className="w-full px-4 py-6 mx-auto max-w-5xl space-y-8 animate-in fade-in duration-500">
+      <Card className="border border-border/40 shadow-sm bg-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="px-3 py-1 text-xs bg-primary/5">
+              AI Tools
+            </Badge>
           </div>
+          <CardTitle className="text-2xl mt-2 font-medium">Study Enhancement Tools</CardTitle>
+          <CardDescription>
+            Scan homework questions for solutions or generate personalized study plans.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsTrigger value="scanner" className="data-[state=active]:bg-primary/10">
+                <div className="flex items-center space-x-2">
+                  <ScanSearch size={16} />
+                  <span>Question Scanner</span>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger value="planner" className="data-[state=active]:bg-primary/10">
+                <div className="flex items-center space-x-2">
+                  <BookOpen size={16} />
+                  <span>Study Planner</span>
+                </div>
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Loading Indicator */}
-          {isPlanLoading && (
-            <div className="flex items-center justify-center p-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
-              <span className="ml-2">Generating your study plan...</span>
-            </div>
-          )}
+            {/* Question Scanner Tab */}
+            <TabsContent value="scanner" className="space-y-4">
+              {!imageSrc && (
+                <Card className="border border-border/30 bg-background/50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xl">Question Scanner</CardTitle>
+                    <CardDescription>
+                      Upload an image of your homework question and get a detailed solution.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <Button onClick={triggerFileInput} className="group">
+                        <Upload size={16} className="mr-2 group-hover:animate-bounce" />
+                        Upload Image
+                      </Button>
+                      <Button 
+                        onClick={startCamera} 
+                        variant="outline"
+                        className="border-primary/20 group"
+                      >
+                        <Camera size={16} className="mr-2 group-hover:animate-pulse" />
+                        Use Camera
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-          {/* Display Study Plan */}
-          {studyPlan && (
-            <div className="mt-4 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Your Personalized Study Plan</h3>
-              <div className="text-gray-700 leading-relaxed">
-                {formatText(studyPlan)}
-              </div>
-              <button
-                onClick={() => downloadPDF(studyPlan, "study-plan.pdf")}
-                className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-              >
-                Download Study Plan as PDF
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+              {/* Camera Preview */}
+              {!imageSrc && videoRef.current?.srcObject && (
+                <Card className="overflow-hidden border border-border/30">
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      <video ref={videoRef} className="w-full h-full rounded-t-lg" />
+                      <canvas ref={canvasRef} className="hidden" />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between p-4 bg-muted/30">
+                    <Button onClick={captureImage} variant="default">
+                      <CheckCircle size={16} className="mr-2" />
+                      Capture
+                    </Button>
+                    <Button onClick={stopCamera} variant="destructive">
+                      <X size={16} className="mr-2" />
+                      Cancel
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+
+              {/* Display Captured/Uploaded Image */}
+              {imageSrc && (
+                <Card className="overflow-hidden border border-border/30">
+                  <CardContent className="p-0">
+                    <div className="relative">
+                      <img 
+                        src={imageSrc} 
+                        alt="Question" 
+                        className="w-full object-contain max-h-[400px] rounded-t-lg" 
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between p-4 bg-muted/30">
+                    <Button 
+                      onClick={() => {
+                        setImageSrc(null);
+                        setSolution(null);
+                      }} 
+                      variant="outline"
+                      className="border-destructive/20 text-destructive hover:bg-destructive/10"
+                    >
+                      <X size={16} className="mr-2" />
+                      Clear Image
+                    </Button>
+                    {isLoading && (
+                      <div className="flex items-center">
+                        <Loader2 size={16} className="mr-2 animate-spin" />
+                        <span>Analyzing...</span>
+                      </div>
+                    )}
+                  </CardFooter>
+                </Card>
+              )}
+
+              {/* Loading Indicator */}
+              {isLoading && !solution && (
+                <Alert variant="default" className="bg-primary/5 border-primary/10">
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin text-primary" />
+                    <AlertDescription>
+                      Generating detailed solution... This may take a moment.
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
+
+              {/* Display Solution */}
+              {solution && (
+                <Card className="border border-border/30 overflow-hidden shadow-sm transition-all hover:shadow-md">
+                  <CardHeader className="space-y-1 pb-4">
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="px-3 py-1 bg-green-50 text-green-700 border-green-200">
+                        Solution Ready
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-xl">Problem Solution</CardTitle>
+                  </CardHeader>
+                  <Separator />
+                  <CardContent className="pt-6 text-sm leading-relaxed">
+                    <div className="prose prose-sm max-w-none text-card-foreground">
+                      {formatText(solution)}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pb-6">
+                    <Button 
+                      onClick={() => downloadPDF(solution, "question-solution.pdf")} 
+                      className="w-full group transition-all"
+                    >
+                      <FileDown size={16} className="mr-2 group-hover:animate-bounce" />
+                      Download Solution as PDF
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+            </TabsContent>
+
+            {/* Study Planner Tab */}
+            <TabsContent value="planner" className="space-y-4">
+              <Card className="border border-border/30 bg-background/50">
+                <CardHeader>
+                  <CardTitle className="text-xl">Smart Study Planner</CardTitle>
+                  <CardDescription>
+                    Get a personalized study plan based on your attendance and quiz performance.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <Alert className="bg-muted/30 border-primary/20">
+                      <AlertDescription>
+                        Our AI analyzes your class attendance and quiz scores to create a tailored study schedule for the upcoming week.
+                      </AlertDescription>
+                    </Alert>
+                    <Button 
+                      onClick={generateStudyPlan} 
+                      disabled={isPlanLoading} 
+                      className="w-full group"
+                    >
+                      {isPlanLoading ? (
+                        <>
+                          <Loader2 size={16} className="mr-2 animate-spin" />
+                          Generating Plan...
+                        </>
+                      ) : (
+                        <>
+                          <BookOpen size={16} className="mr-2 group-hover:animate-pulse" />
+                          Generate Study Plan
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Display Study Plan */}
+              {studyPlan && (
+                <Card className="border border-border/30 overflow-hidden shadow-sm transition-all hover:shadow-md">
+                  <CardHeader className="space-y-1 pb-4">
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline" className="px-3 py-1 bg-blue-50 text-blue-700 border-blue-200">
+                        Plan Ready
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-xl">Your Personalized Study Plan</CardTitle>
+                  </CardHeader>
+                  <Separator />
+                  <CardContent className="pt-6 text-sm leading-relaxed">
+                    <div className="prose prose-sm max-w-none text-card-foreground">
+                      {formatText(studyPlan)}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="pb-6">
+                    <Button 
+                      onClick={() => downloadPDF(studyPlan, "study-plan.pdf")} 
+                      className="w-full group transition-all"
+                    >
+                      <FileDown size={16} className="mr-2 group-hover:animate-bounce" />
+                      Download Study Plan as PDF
+                    </Button>
+                  </CardFooter>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 }
