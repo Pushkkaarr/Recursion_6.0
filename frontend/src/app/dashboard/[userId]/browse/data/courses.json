@@ -1,0 +1,664 @@
+{
+  "courses": [
+    {
+      "id": "1",
+      "title": "Introduction to Python Programming",
+      "description": "Learn the basics of Python programming including loops, conditionals, data structures, and functions.",
+      "instructor": "Dr. Angela Yu",
+      "organization": "University of Michigan",
+      "rating": 4.8,
+      "reviews": 15823,
+      "enrolled": 345982,
+      "price": 0,
+      "isPaid": false,
+      "duration": 20,
+      "durationUnit": "hours",
+      "level": "beginner",
+      "topics": ["Programming", "Python", "Computer Science"],
+      "skills": ["Python", "Programming", "Problem Solving", "Logic"],
+      "imageUrl": "https://images.unsplash.com/photo-1555952517-2e8e729e0b44?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cHl0aG9ufGVufDB8fDB8fHww",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Getting Started with Python",
+          "content": "Installation, basic syntax, variables, data types"
+        },
+        {
+          "week": 2,
+          "title": "Control Flow",
+          "content": "Conditionals, loops, logical operators"
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "title": "Machine Learning Specialization",
+      "description": "Learn the fundamentals of machine learning and how to use these techniques to build real-world AI applications.",
+      "instructor": "Andrew Ng",
+      "organization": "Stanford University",
+      "rating": 4.9,
+      "reviews": 32568,
+      "enrolled": 789412,
+      "price": 49,
+      "isPaid": true,
+      "duration": 3,
+      "durationUnit": "months",
+      "level": "intermediate",
+      "topics": ["Machine Learning", "AI", "Data Science"],
+      "skills": ["Python", "Machine Learning", "Neural Networks", "Data Analysis"],
+      "imageUrl": "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fG1hY2hpbmUlMjBsZWFybmluZ3xlbnwwfHwwfHx8MA%3D%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to Machine Learning",
+          "content": "Supervised vs. unsupervised learning, regression, classification"
+        },
+        {
+          "week": 2,
+          "title": "Linear Regression",
+          "content": "Cost function, gradient descent, linear algebra essentials"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "title": "React for Beginners",
+      "description": "A comprehensive introduction to React, the popular JavaScript library for building user interfaces.",
+      "instructor": "Cassidy Williams",
+      "organization": "Meta",
+      "rating": 4.7,
+      "reviews": 8932,
+      "enrolled": 123478,
+      "price": 39,
+      "isPaid": true,
+      "duration": 24,
+      "durationUnit": "hours",
+      "level": "beginner",
+      "topics": ["Web Development", "JavaScript", "React"],
+      "skills": ["React", "JavaScript", "Frontend Development", "UI Design"],
+      "imageUrl": "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cmVhY3R8ZW58MHx8MHx8fDA%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "React Fundamentals",
+          "content": "Components, props, state, JSX syntax"
+        },
+        {
+          "week": 2,
+          "title": "Hooks and State Management",
+          "content": "useState, useEffect, useContext, custom hooks"
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "title": "Data Science and Analytics",
+      "description": "Comprehensive course on data analysis techniques, statistical methods, and data visualization tools.",
+      "instructor": "Emily Wilson",
+      "organization": "IBM",
+      "rating": 4.6,
+      "reviews": 7632,
+      "enrolled": 98763,
+      "price": 0,
+      "isPaid": false,
+      "duration": 6,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Data Science", "Statistics", "Data Analysis"],
+      "skills": ["Python", "Data Visualization", "Statistical Analysis", "Pandas"],
+      "imageUrl": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZGF0YSUyMHNjaWVuY2V8ZW58MHx8MHx8fDA%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to Data Science",
+          "content": "Data collection, cleaning, and preparation"
+        },
+        {
+          "week": 2,
+          "title": "Exploratory Data Analysis",
+          "content": "Statistical summaries, visualization techniques"
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "title": "UX/UI Design Principles",
+      "description": "Learn the fundamentals of user experience and interface design to create engaging digital products.",
+      "instructor": "Sarah Johnson",
+      "organization": "Google",
+      "rating": 4.8,
+      "reviews": 6254,
+      "enrolled": 78562,
+      "price": 59,
+      "isPaid": true,
+      "duration": 8,
+      "durationUnit": "weeks",
+      "level": "beginner",
+      "topics": ["Design", "UX", "UI"],
+      "skills": ["Figma", "User Research", "Prototyping", "Design Thinking"],
+      "imageUrl": "https://images.unsplash.com/photo-1587440871875-191322ee64b0?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8dWklMjBkZXNpZ258ZW58MHx8MHx8fDA%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to UX Design",
+          "content": "User-centered design, design thinking process, user research"
+        },
+        {
+          "week": 2,
+          "title": "UI Design Fundamentals",
+          "content": "Visual hierarchy, typography, color theory, layout principles"
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "title": "Cloud Computing with AWS",
+      "description": "Master Amazon Web Services and learn to design, deploy, and manage applications in the cloud.",
+      "instructor": "David Miller",
+      "organization": "Amazon",
+      "rating": 4.7,
+      "reviews": 5321,
+      "enrolled": 67890,
+      "price": 69,
+      "isPaid": true,
+      "duration": 10,
+      "durationUnit": "weeks",
+      "level": "advanced",
+      "topics": ["Cloud Computing", "AWS", "DevOps"],
+      "skills": ["AWS", "Cloud Architecture", "Serverless", "DevOps"],
+      "imageUrl": "https://images.unsplash.com/photo-1544197150-b99a580bb7a8?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y2xvdWQlMjBjb21wdXRpbmd8ZW58MHx8MHx8fDA%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "AWS Fundamentals",
+          "content": "AWS console, IAM, EC2, S3"
+        },
+        {
+          "week": 2,
+          "title": "Networking and Security",
+          "content": "VPC, security groups, subnets, NACLs"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "title": "Digital Marketing Mastery",
+      "description": "Comprehensive course covering SEO, content marketing, social media, email marketing, and analytics.",
+      "instructor": "Michael Chen",
+      "organization": "HubSpot Academy",
+      "rating": 4.5,
+      "reviews": 4876,
+      "enrolled": 56789,
+      "price": 0,
+      "isPaid": false,
+      "duration": 12,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Marketing", "Digital Marketing", "SEO"],
+      "skills": ["SEO", "Content Marketing", "Social Media Marketing", "Analytics"],
+      "imageUrl": "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bWFya2V0aW5nfGVufDB8fDB8fHww",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Digital Marketing Strategy",
+          "content": "Marketing fundamentals, buyer personas, customer journey"
+        },
+        {
+          "week": 2,
+          "title": "Search Engine Optimization",
+          "content": "On-page SEO, off-page SEO, technical SEO"
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "title": "Cybersecurity Fundamentals",
+      "description": "Learn essential security concepts, threat detection, encryption, and security best practices.",
+      "instructor": "Robert Smith",
+      "organization": "CompTIA",
+      "rating": 4.8,
+      "reviews": 3842,
+      "enrolled": 45678,
+      "price": 49,
+      "isPaid": true,
+      "duration": 6,
+      "durationUnit": "weeks",
+      "level": "beginner",
+      "topics": ["Cybersecurity", "Network Security", "Information Security"],
+      "skills": ["Network Security", "Penetration Testing", "Encryption", "Security Analysis"],
+      "imageUrl": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Y3liZXJzZWN1cml0eXxlbnwwfHwwfHx8MA%3D%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to Cybersecurity",
+          "content": "Threats, vulnerabilities, security principles"
+        },
+        {
+          "week": 2,
+          "title": "Network Security",
+          "content": "Firewalls, VPNs, intrusion detection, prevention systems"
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "title": "Full Stack Web Development",
+      "description": "Master both frontend and backend technologies to build complete web applications.",
+      "instructor": "Jessica Lee",
+      "organization": "The Odin Project",
+      "rating": 4.7,
+      "reviews": 8965,
+      "enrolled": 112345,
+      "price": 79,
+      "isPaid": true,
+      "duration": 16,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Web Development", "JavaScript", "Node.js"],
+      "skills": ["HTML/CSS", "JavaScript", "Node.js", "MongoDB", "React"],
+      "imageUrl": "https://images.unsplash.com/photo-1571171637578-41bc2dd41cd2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NHx8d2ViJTIwZGV2ZWxvcG1lbnR8ZW58MHx8MHx8fDA%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "HTML and CSS Fundamentals",
+          "content": "HTML5 semantics, CSS layouts, responsive design"
+        },
+        {
+          "week": 2,
+          "title": "JavaScript Essentials",
+          "content": "Variables, functions, DOM manipulation, events"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "title": "iOS App Development with Swift",
+      "description": "Learn to build iOS applications using Swift and the iOS SDK.",
+      "instructor": "Tim Cook",
+      "organization": "Apple",
+      "rating": 4.9,
+      "reviews": 7523,
+      "enrolled": 89674,
+      "price": 59,
+      "isPaid": true,
+      "duration": 12,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Mobile Development", "iOS", "Swift"],
+      "skills": ["Swift", "iOS Development", "UI Design", "Xcode"],
+      "imageUrl": "https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c3dpZnQlMjBwcm9ncmFtbWluZ3xlbnwwfHwwfHx8MA%3D%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Swift Programming Basics",
+          "content": "Swift syntax, control flow, functions, classes and structs"
+        },
+        {
+          "week": 2,
+          "title": "iOS App Fundamentals",
+          "content": "UIKit, view controllers, navigation, autolayout"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "title": "Blockchain and Cryptocurrency",
+      "description": "Understand blockchain technology, cryptocurrencies, and their applications and implications.",
+      "instructor": "Vitalik Buterin",
+      "organization": "Ethereum Foundation",
+      "rating": 4.6,
+      "reviews": 3217,
+      "enrolled": 45678,
+      "price": 69,
+      "isPaid": true,
+      "duration": 8,
+      "durationUnit": "weeks",
+      "level": "advanced",
+      "topics": ["Blockchain", "Cryptocurrency", "Fintech"],
+      "skills": ["Blockchain", "Smart Contracts", "Cryptocurrency", "Distributed Systems"],
+      "imageUrl": "https://images.unsplash.com/photo-1639762681057-408e52192e55?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YmxvY2tjaGFpbnxlbnwwfHwwfHx8MA%3D%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Blockchain Fundamentals",
+          "content": "Consensus mechanisms, distributed ledgers, cryptography basics"
+        },
+        {
+          "week": 2,
+          "title": "Cryptocurrencies",
+          "content": "Bitcoin, Ethereum, tokenomics, mining, wallets"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "title": "Artificial Intelligence Ethics",
+      "description": "Explore the ethical implications, challenges, and considerations in AI development and deployment.",
+      "instructor": "Dr. Timnit Gebru",
+      "organization": "MIT",
+      "rating": 4.8,
+      "reviews": 2845,
+      "enrolled": 34567,
+      "price": 0,
+      "isPaid": false,
+      "duration": 4,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["AI", "Ethics", "Philosophy"],
+      "skills": ["Ethical Reasoning", "AI Ethics", "Policy Analysis", "Critical Thinking"],
+      "imageUrl": "https://images.unsplash.com/photo-1677442135136-760c813a763e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8YWklMjBldGhpY3N8ZW58MHx8MHx8fDA%3D",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to AI Ethics",
+          "content": "Ethical frameworks, historical context, current challenges"
+        },
+        {
+          "week": 2,
+          "title": "Bias and Fairness in AI",
+          "content": "Algorithmic bias, fairness metrics, mitigation strategies"
+        }
+      ]
+    },
+    {
+      "id": "13",
+      "title": "Quantum Computing Fundamentals",
+      "description": "Explore the principles of quantum mechanics and learn how quantum computers work, including quantum gates, algorithms, and potential applications.",
+      "instructor": "Dr. John Preskill",
+      "organization": "California Institute of Technology",
+      "rating": 4.7,
+      "reviews": 3254,
+      "enrolled": 42689,
+      "price": 79,
+      "isPaid": true,
+      "duration": 10,
+      "durationUnit": "weeks",
+      "level": "advanced",
+      "topics": ["Quantum Computing", "Physics", "Computer Science"],
+      "skills": ["Quantum Algorithms", "Linear Algebra", "Quantum Mechanics", "Programming"],
+      "imageUrl": "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Quantum Mechanics Review",
+          "content": "Superposition, entanglement, measurement, Dirac notation"
+        },
+        {
+          "week": 2,
+          "title": "Quantum Bits and Gates",
+          "content": "Qubits, quantum gates, circuit model, universal gate sets"
+        }
+      ]
+    },
+    {
+      "id": "14",
+      "title": "Financial Markets and Investment Strategy",
+      "description": "Understand how financial markets work and develop investment strategies based on economic principles, risk assessment, and portfolio management.",
+      "instructor": "Dr. Robert Shiller",
+      "organization": "Yale University",
+      "rating": 4.8,
+      "reviews": 8976,
+      "enrolled": 125478,
+      "price": 59,
+      "isPaid": true,
+      "duration": 8,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Finance", "Economics", "Investment"],
+      "skills": ["Financial Analysis", "Portfolio Management", "Risk Assessment", "Market Analysis"],
+      "imageUrl": "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to Financial Markets",
+          "content": "Market structure, participants, regulations, financial instruments"
+        },
+        {
+          "week": 2,
+          "title": "Risk and Return",
+          "content": "Risk measures, return calculations, risk-adjusted performance"
+        }
+      ]
+    },
+    {
+      "id": "15",
+      "title": "Astrophysics: Exploring the Cosmos",
+      "description": "Journey through the universe's mysteries, from stars and galaxies to black holes and the Big Bang, applying principles of physics to understand cosmic phenomena.",
+      "instructor": "Dr. Neil deGrasse Tyson",
+      "organization": "American Museum of Natural History",
+      "rating": 4.9,
+      "reviews": 7654,
+      "enrolled": 98765,
+      "price": 49,
+      "isPaid": true,
+      "duration": 6,
+      "durationUnit": "weeks",
+      "level": "beginner",
+      "topics": ["Astrophysics", "Astronomy", "Physics"],
+      "skills": ["Scientific Reasoning", "Data Analysis", "Physics", "Astronomical Observations"],
+      "imageUrl": "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Our Place in the Universe",
+          "content": "Scale of the universe, cosmic calendar, observational astronomy"
+        },
+        {
+          "week": 2,
+          "title": "Stars and Stellar Evolution",
+          "content": "Star formation, main sequence, stellar nucleosynthesis, supernovae"
+        }
+      ]
+    },
+    {
+      "id": "16",
+      "title": "Game Design and Development",
+      "description": "Master the art and science of game design, including mechanics, level design, narrative, and implementation using game engines.",
+      "instructor": "Will Wright",
+      "organization": "Electronic Arts",
+      "rating": 4.7,
+      "reviews": 6543,
+      "enrolled": 87654,
+      "price": 69,
+      "isPaid": true,
+      "duration": 12,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Game Development", "Design", "Programming"],
+      "skills": ["Game Design", "Unity", "C#", "Level Design", "Storytelling"],
+      "imageUrl": "https://images.unsplash.com/photo-1556438064-2d7646166914?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Fundamentals of Game Design",
+          "content": "Game mechanics, dynamics, aesthetics, player psychology"
+        },
+        {
+          "week": 2,
+          "title": "Game Engines and Tools",
+          "content": "Introduction to Unity, asset creation, basic scripting"
+        }
+      ]
+    },
+    {
+      "id": "17",
+      "title": "Music Theory and Composition",
+      "description": "Develop a strong foundation in music theory and learn composition techniques to create your own musical pieces across different styles and genres.",
+      "instructor": "Dr. Winifred Phillips",
+      "organization": "Berklee College of Music",
+      "rating": 4.6,
+      "reviews": 5432,
+      "enrolled": 76543,
+      "price": 0,
+      "isPaid": false,
+      "duration": 8,
+      "durationUnit": "weeks",
+      "level": "beginner",
+      "topics": ["Music", "Arts", "Composition"],
+      "skills": ["Music Theory", "Composition", "Ear Training", "Notation"],
+      "imageUrl": "https://images.unsplash.com/photo-1507838153414-b4b713384a76?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Fundamentals of Music Theory",
+          "content": "Notes, scales, intervals, rhythm, key signatures"
+        },
+        {
+          "week": 2,
+          "title": "Harmony and Chord Progressions",
+          "content": "Triads, seventh chords, chord progressions, voice leading"
+        }
+      ]
+    },
+    {
+      "id": "18",
+      "title": "Neuroscience and Brain Function",
+      "description": "Explore the structure and function of the human brain, including neural signaling, brain regions, cognition, emotion, and behavioral neuroscience.",
+      "instructor": "Dr. Robert Sapolsky",
+      "organization": "Stanford University",
+      "rating": 4.9,
+      "reviews": 7865,
+      "enrolled": 98543,
+      "price": 59,
+      "isPaid": true,
+      "duration": 10,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Neuroscience", "Biology", "Psychology"],
+      "skills": ["Neuroanatomy", "Research Methods", "Critical Thinking", "Data Analysis"],
+      "imageUrl": "https://images.unsplash.com/photo-1559757175-7b21e5afba0b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Brain Structure and Function",
+          "content": "Neuroanatomy, brain regions, neural development"
+        },
+        {
+          "week": 2,
+          "title": "Neural Signaling",
+          "content": "Action potentials, synaptic transmission, neurotransmitters"
+        }
+      ]
+    },
+    {
+      "id": "19",
+      "title": "Creative Writing: Fiction and Storytelling",
+      "description": "Develop your fiction writing skills and learn techniques for crafting compelling characters, plots, and narratives across different literary genres.",
+      "instructor": "Margaret Atwood",
+      "organization": "University of Toronto",
+      "rating": 4.8,
+      "reviews": 6754,
+      "enrolled": 87654,
+      "price": 0,
+      "isPaid": false,
+      "duration": 6,
+      "durationUnit": "weeks",
+      "level": "beginner",
+      "topics": ["Writing", "Literature", "Creative Arts"],
+      "skills": ["Storytelling", "Character Development", "Plot Construction", "Editing"],
+      "imageUrl": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Elements of Fiction",
+          "content": "Characters, plot, setting, point of view, theme"
+        },
+        {
+          "week": 2,
+          "title": "Character Development",
+          "content": "Creating memorable characters, motivation, conflict, growth"
+        }
+      ]
+    },
+    {
+      "id": "20",
+      "title": "Sustainable Development and Environmental Policy",
+      "description": "Examine the principles of sustainable development and the policies needed to address environmental challenges like climate change, biodiversity loss, and resource depletion.",
+      "instructor": "Dr. Jeffrey Sachs",
+      "organization": "Columbia University",
+      "rating": 4.7,
+      "reviews": 5432,
+      "enrolled": 76543,
+      "price": 0,
+      "isPaid": false,
+      "duration": 8,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Sustainability", "Environmental Science", "Policy"],
+      "skills": ["Policy Analysis", "Sustainable Planning", "Systems Thinking", "Impact Assessment"],
+      "imageUrl": "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Foundations of Sustainable Development",
+          "content": "History, principles, goals, indicators, challenges"
+        },
+        {
+          "week": 2,
+          "title": "Climate Change Policy",
+          "content": "International agreements, carbon pricing, sector policies"
+        }
+      ]
+    },
+    {
+      "id": "21",
+      "title": "Robotics Engineering and AI",
+      "description": "Learn to design, build, and program robots, integrating mechanical engineering, electronics, computer science, and artificial intelligence.",
+      "instructor": "Dr. Ayanna Howard",
+      "organization": "Georgia Institute of Technology",
+      "rating": 4.8,
+      "reviews": 4321,
+      "enrolled": 65432,
+      "price": 79,
+      "isPaid": true,
+      "duration": 12,
+      "durationUnit": "weeks",
+      "level": "advanced",
+      "topics": ["Robotics", "Engineering", "AI"],
+      "skills": ["Robot Design", "Programming", "Control Systems", "Computer Vision"],
+      "imageUrl": "https://images.unsplash.com/photo-1561557944-6e7860c31432?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Fundamentals of Robotics",
+          "content": "Robot types, components, kinematics, mechanics"
+        },
+        {
+          "week": 2,
+          "title": "Robot Programming and Control",
+          "content": "Programming languages, control theory, sensors, feedback systems"
+        }
+      ]
+    },
+    {
+      "id": "22",
+      "title": "Public Health and Epidemiology",
+      "description": "Study the patterns, causes, and effects of health and disease conditions in populations, and learn methods for disease prevention and health promotion.",
+      "instructor": "Dr. Anthony Fauci",
+      "organization": "Johns Hopkins University",
+      "rating": 4.9,
+      "reviews": 7654,
+      "enrolled": 98765,
+      "price": 49,
+      "isPaid": true,
+      "duration": 8,
+      "durationUnit": "weeks",
+      "level": "intermediate",
+      "topics": ["Public Health", "Medicine", "Epidemiology"],
+      "skills": ["Epidemiological Methods", "Data Analysis", "Health Policy", "Disease Prevention"],
+      "imageUrl": "https://images.unsplash.com/photo-1579154341098-e4e158cc7f55?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+      "syllabus": [
+        {
+          "week": 1,
+          "title": "Introduction to Public Health",
+          "content": "History, systems, determinants of health, global health challenges"
+        },
+        {
+          "week": 2,
+          "title": "Epidemiological Methods",
+          "content": "Study design, data collection, statistical analysis, interpretation"
+        }
+      ]
+    }
+  ]
+}

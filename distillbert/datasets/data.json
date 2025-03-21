@@ -1,0 +1,213 @@
+{
+    "topics": {
+            "Data Structures and Algorithms": {
+                "Linear Structures": [
+                    "Array", 
+                    "Linked List", 
+                    "Stack", 
+                    "Queue", 
+                    "Circular Buffer",
+                    "Data Structures"
+                ],
+                "Tree Structures": [
+                    "Binary Tree", 
+                    "Binary Search Tree", 
+                    "AVL Tree", 
+                    "Red-Black Tree", 
+                    "Heap", 
+                    "Tree"
+                ],
+                "Graph Structures": [
+                    "Adjacency List", 
+                    "Adjacency Matrix", 
+                    "Weighted Graph", 
+                    "Directed Graph", 
+                    "Undirected Graph"
+                ],
+                "Algorithm Analysis": [
+                    "Time Complexity",
+                    "Sorting Algorithms", 
+                    "Search Algorithms",
+                    "Recursive Algorithms",
+                    "Linear Search", 
+                    "Binary Search", 
+                    "Depth-First Search (DFS)", 
+                    "Breadth-First Search (BFS)"
+                ],
+                "Optimization Techniques": [
+                    "Dynamic Programming", 
+                    "Greedy Algorithms", 
+                    "Backtracking"
+                ]
+            },
+            "Mathematics": {
+                "Algebra": [
+                    "Linear Equations",
+                    "Quadratic Equations", 
+                    "Logarithms",
+                    "Number Series",
+                    "Ratio",
+                    "Proportion"
+                ],
+                "Number Theory": [
+                    "LCM and HCF",
+                    "Prime Numbers",
+                    "Digit Manipulations",
+                    "Number Patterns",
+                    "Odd",
+                    "Even"
+                ]
+            },
+            "Probability and Statistics": {
+                "Probability Theory": [
+                    "Conditional Probability", 
+                    "Bayes' Theorem", 
+                    "Random Variables",
+                    "Dice Probability",
+                    "Event Probability",
+                    "Combinatorics"
+                ],
+                "Statistical Methods": [
+                    "Hypothesis Testing", 
+                    "Confidence Intervals", 
+                    "Regression Analysis",
+                    "Data Interpretation",
+                    "Averages",
+                    "Distribution Analysis",
+                    "Selected",
+                    "Combination"
+                ]
+            },
+            "Machine Learning and Computer Science": {
+                "Learning Types": [
+                    "Supervised Learning", 
+                    "Unsupervised Learning", 
+                    "Reinforcement Learning"
+                ],
+                "Machine Learning Algorithms": [
+                    "Linear Regression", 
+                    "Logistic Regression", 
+                    "Decision Trees", 
+                    "Support Vector Machines", 
+                    "Neural Networks", 
+                    "K-Means Clustering"
+                ],
+                "Machine Learning Techniques": [
+                    "Feature Scaling", 
+                    "Dimensionality Reduction", 
+                    "Regularization", 
+                    "Cross-Validation"
+                ],
+                "Programming Concepts": [
+                    "Inheritance", 
+                    "Polymorphism", 
+                    "Encapsulation", 
+                    "Abstraction",
+                    "Lambda Functions", 
+                    "Exception Handling", 
+                    "Generics", 
+                    "Decorators"
+                ],
+                "Programming Languages": [
+                    "Java",
+                    "Python",
+                    "C++/C"
+                ]
+            },
+            "Computer Networks": {
+                "Protocols": [
+                    "TCP/IP", 
+                    "HTTP/HTTPS", 
+                    "UDP", 
+                    "DNS"
+                ],
+                "Network Architecture": [
+                    "Client-Server Model", 
+                    "Peer-to-Peer", 
+                    "Network Topologies"
+                ],
+                "Network Security": [
+                    "Network Address Translation (NAT)", 
+                    "Firewalls", 
+                    "Encryption"
+                ]
+            },
+            "Database Systems": {
+                "Design Principles": [
+                    "Normalization", 
+                    "ACID Properties", 
+                    "Database Indexing"
+                ],
+                "Query Languages": [
+                    "SQL", 
+                    "Relational Algebra"
+                ],
+                "Database Types": [
+                    "Relational Databases", 
+                    "NoSQL Databases", 
+                    "Graph Databases",
+                    "DBMS",
+                    "DWM"
+                ]
+            },
+            "Physics and Mechanics": {
+                "Kinematics": [
+                    "Speed and Distance",
+                    "Train Problems",
+                    "Relative Motion",
+                    "Platform Crossing"
+                ],
+                "Geometry and Measurements": [
+                    "Area Calculations",
+                    "Volume Problems",
+                    "Trigonometry",
+                    "Shadow Problems"
+                ]
+            },
+            "Financial Mathematics": {
+                "Interest Calculations": [
+                    "Simple Interest",
+                    "Profit and Loss",
+                    "Stock Market Pricing",
+                    "Discount Calculations"
+                ]
+            },
+            "Time and Reasoning": {
+                "Clock and Time Problems": [
+                    "Angle Calculations",
+                    "Hand Movements",
+                    "Time-Based Reasoning"
+                ],
+                "Logical Reasoning": [
+                    "Series Completion",
+                    "Pattern Identification",
+                    "Logical Deductions",
+                    "Age-Related Reasoning",
+                    "Resource Allocation",
+                    "Comparative Problem-Solving"
+                ]
+            },
+            "Computer Architecture": {
+                "Hardware Components": [
+                    "CPU Architecture", 
+                    "GPU Computing", 
+                    "Memory Hierarchies"
+                ],
+                "Performance Optimization": [
+                    "Pipelining", 
+                    "Cache Management", 
+                    "Parallel Processing"
+                ]
+            },
+            "Miscellaneous": {
+                "Interdisciplinary Topics": [
+                    "System Design", 
+                    "Software Engineering Practices", 
+                    "Development Methodologies",
+                    "Mixed Problem-Solving",
+                    "Multi-Step Reasoning",
+                    "Complex Scenario Analysis"
+                ]
+            }
+    }
+}
