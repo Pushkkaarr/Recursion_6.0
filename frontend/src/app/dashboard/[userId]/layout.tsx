@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUser } from '@clerk/nextjs';
+import { useAuth, useUser } from '@clerk/nextjs';
 
 
 export default function DashboardLayout({ children }) {
@@ -27,6 +27,7 @@ export default function DashboardLayout({ children }) {
   const [studentAuth, setStudentAuth] = useState(null);
   const router = useRouter();
   const { user }=useUser();
+  const { signOut } = useAuth();
   
 
 //   useEffect(() => {
@@ -49,9 +50,13 @@ export default function DashboardLayout({ children }) {
 //     }
 //   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('studentAuth');
-    router.push('/login');
+const handleLogout = async () => {
+    try {
+      await signOut(); // Call Clerk's signOut function
+      console.log("User signed out successfully");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   // Get user ID from local storage for dynamic routing
@@ -151,14 +156,14 @@ export default function DashboardLayout({ children }) {
                 <p className="text-sm font-medium">{studentAuth?.name || "Student"}</p>
                 <p className="text-xs text-muted-foreground">Student</p>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-auto"
-                onClick={handleLogout}
-              >
-                <LogOut size={16} />
-              </Button>
+             <Button
+      variant="ghost"
+      size="icon"
+      className="ml-auto"
+      onClick={handleLogout}
+    >
+      <LogOut size={16} />
+    </Button>
             </div>
           </div>
         </div>
@@ -181,12 +186,14 @@ export default function DashboardLayout({ children }) {
             <span>Dashboard</span>
           </div>
           <div className="ml-auto flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="gap-1" onClick={handleLogout}>
-              <LogOut size={16} />
-              <span className="sr-only md:not-sr-only md:ml-2">
-                Logout
-              </span>
-            </Button>
+              <Button
+      variant="ghost"
+      size="icon"
+      className="ml-auto"
+      onClick={handleLogout}
+    >
+      <LogOut size={16} />
+    </Button>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6">
