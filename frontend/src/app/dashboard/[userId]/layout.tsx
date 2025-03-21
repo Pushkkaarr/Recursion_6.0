@@ -110,7 +110,7 @@ const pathname = usePathname();
     },
     {
         title: 'AI Quiz',
-        href: `/dashboard/${userId}/quiz`,
+        href: `/dashboard/${userId}/aiQuiz`,
         icon: <Bot size={20} />,
       },
   ];
