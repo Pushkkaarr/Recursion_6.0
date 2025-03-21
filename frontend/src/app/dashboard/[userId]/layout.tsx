@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+// Add this import at the top
+import { usePathname } from 'next/navigation';
+
 import {
   BarChart3,
   BookOpen,
@@ -19,17 +22,25 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth, useUser } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 
 
-export default function DashboardLayout({ children }) {
+import { ReactNode } from 'react';
+
+export default function DashboardLayout({ children }: { children: ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [studentAuth, setStudentAuth] = useState(null);
+  interface StudentAuth {
+    name: string;
+    isAuthenticated: boolean;
+  }
+
+  const [studentAuth, setStudentAuth] = useState<StudentAuth | null>(null);
   const router = useRouter();
   const { user }=useUser();
-  const { signOut } = useAuth();
   
 
+// Inside your component
+const pathname = usePathname();
 //   useEffect(() => {
 //     const authData = localStorage.getItem('studentAuth');
 //     if (!authData) {
@@ -50,13 +61,9 @@ export default function DashboardLayout({ children }) {
 //     }
 //   }, [router]);
 
-const handleLogout = async () => {
-    try {
-      await signOut(); // Call Clerk's signOut function
-      console.log("User signed out successfully");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('studentAuth');
+    router.push('/login');
   };
 
   // Get user ID from local storage for dynamic routing
@@ -83,14 +90,19 @@ const handleLogout = async () => {
       href: `/dashboard/${userId}/analytics`,
       icon: <BarChart3 size={20} />,
     },
-    {
-      title: 'Community',
-      href: `/dashboard/${userId}/community`,
-      icon: <Users size={20} />,
-    },
+    // {
+    //   title: 'Community',
+    //   href: `/dashboard/${userId}/community`,
+    //   icon: <Users size={20} />,
+    // },
     {
       title: 'Messages',
       href: `/dashboard/${userId}/messages`,
+      icon: <MessageSquare size={20} />,
+    },
+    {
+      title: 'Browse courses',
+      href: `/dashboard/${userId}/browse`,
       icon: <MessageSquare size={20} />,
     },
   ];
@@ -126,20 +138,20 @@ const handleLogout = async () => {
           <div className="px-4 py-4 space-y-4 overflow-y-auto flex-grow">
             <div className="pb-4">
               <nav className="space-y-1">
-                {studentNavItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg group transition-colors ${
-                      router.pathname === item.href
-                        ? 'bg-primary text-primary-foreground'
-                        : 'text-foreground/70 hover:text-foreground hover:bg-primary/10'
-                    }`}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    {item.title}
-                  </Link>
-                ))}
+              {studentNavItems.map((item) => (
+  <Link
+    key={item.href}
+    href={item.href}
+    className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg group transition-colors ${
+      pathname === item.href
+        ? 'bg-primary text-primary-foreground'
+        : 'text-foreground/70 hover:text-foreground hover:bg-primary/10'
+    }`}
+  >
+    <span className="mr-3">{item.icon}</span>
+    {item.title}
+  </Link>
+))}
               </nav>
             </div>
           </div>
@@ -156,14 +168,14 @@ const handleLogout = async () => {
                 <p className="text-sm font-medium">{studentAuth?.name || "Student"}</p>
                 <p className="text-xs text-muted-foreground">Student</p>
               </div>
-             <Button
-      variant="ghost"
-      size="icon"
-      className="ml-auto"
-      onClick={handleLogout}
-    >
-      <LogOut size={16} />
-    </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ml-auto"
+                onClick={handleLogout}
+              >
+                <LogOut size={16} />
+              </Button>
             </div>
           </div>
         </div>
@@ -186,14 +198,12 @@ const handleLogout = async () => {
             <span>Dashboard</span>
           </div>
           <div className="ml-auto flex items-center gap-4">
-              <Button
-      variant="ghost"
-      size="icon"
-      className="ml-auto"
-      onClick={handleLogout}
-    >
-      <LogOut size={16} />
-    </Button>
+            <Button variant="ghost" size="sm" className="gap-1" onClick={handleLogout}>
+              <LogOut size={16} />
+              <span className="sr-only md:not-sr-only md:ml-2">
+                Logout
+              </span>
+            </Button>
           </div>
         </header>
         <main className="flex-1 p-4 md:p-6">

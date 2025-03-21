@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, Download, Share2 } from "lucide-react";
 
 const performanceData = [
-  { month: 'Jan', Mathematics: 65, Science: 75, English: 78, History: 62 },
-  { month: 'Feb', Mathematics: 68, Science: 73, English: 80, History: 65 },
-  { month: 'Mar', Mathematics: 72, Science: 78, English: 82, History: 68 },
-  { month: 'Apr', Mathematics: 75, Science: 82, English: 85, History: 72 },
-  { month: 'May', Mathematics: 80, Science: 85, English: 88, History: 76 },
+  { month: 'Jan', Mathematics: 34, Science: 56, English: 67, History: 30 },
+  { month: 'Feb', Mathematics: 50, Science: 60, English: 73, History: 45 },
+  { month: 'Mar', Mathematics: 55, Science: 69, English: 79, History: 59 },
+  { month: 'Apr', Mathematics: 65, Science: 79, English: 85, History: 69 },
+  { month: 'May', Mathematics: 75, Science: 85, English: 90, History: 76 },
   { month: 'Jun', Mathematics: 85, Science: 87, English: 90, History: 80 },
 ];
 
