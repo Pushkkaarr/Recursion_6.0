@@ -5,9 +5,12 @@ import { jsPDF } from "jspdf";
 
 export default function QuestionScanner() {
   const [solution, setSolution] = useState(null);
+  const [studyPlan, setStudyPlan] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPlanLoading, setIsPlanLoading] = useState(false);
   const [imageSrc, setImageSrc] = useState(null);
   const [logs, setLogs] = useState([]);
+  const [activeTab, setActiveTab] = useState("scanner"); // "scanner" or "planner"
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -157,8 +160,79 @@ export default function QuestionScanner() {
     }
   };
 
-  // Format the solution text for display
-  const formatSolution = (text) => {
+  // Generate Smart Study Plan using Gemini API
+  const generateStudyPlan = async () => {
+    setIsPlanLoading(true);
+    setStudyPlan(null);
+    addLog("Generating smart study plan...");
+
+    // Generate a random quiz score between 50-70%
+    const mathScore = Math.floor(Math.random() * 21) + 50;
+    const physicsScore = Math.floor(Math.random() * 21) + 50;
+
+    // Mock prompt for Gemini API
+    const prompt = `
+      You are an AI-powered smart study planner that helps students stay on track with their learning. The user follows a weekly study plan from Monday to Friday. Based on their attendance and quiz performance, generate a customized study plan for the upcoming week.
+
+      ### Student Data:
+      - Study Days: Monday, Tuesday, Wednesday (Absent), Thursday, Friday
+      - Missed Study Topics: The student was absent on Wednesday, so the missing topics should be rescheduled for the upcoming week.
+      - Quiz Performance: The student has taken quizzes and scored ${mathScore}% on Math and ${physicsScore}% on Physics. Identify the weakest subjects based on this performance.
+      - Study Material Suggestions: Provide at least 2-3 study resources for weak subjects.
+
+      Please provide the following:
+      1. Missed Topics Rescheduling
+      2. Quiz Performance Analysis
+      3. Personalized Study Plan for Next Week (Monday to Friday)
+      4. A motivational message for the student
+    `;
+
+    try {
+      const response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": process.env.NEXT_PUBLIC_GEMINI_API_KEY || "",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: prompt,
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+        throw new Error("Invalid response from Gemini API.");
+      }
+
+      const generatedPlan = data.candidates[0].content.parts[0].text;
+      addLog("Study plan generated successfully.");
+      setStudyPlan(generatedPlan);
+    } catch (error) {
+      addLog(`Error generating study plan: ${error instanceof Error ? error.message : "Unknown error"}`);
+      setStudyPlan("Failed to generate study plan. Please try again.");
+    } finally {
+      setIsPlanLoading(false);
+      addLog("Study plan generation completed.");
+    }
+  };
+
+  // Format the solution or study plan text for display
+  const formatText = (text) => {
     if (!text) return null;
 
     // Split by newlines and handle basic list formatting
@@ -173,6 +247,41 @@ export default function QuestionScanner() {
           </li>
         );
       }
+
+      // Check for headers (e.g., "## " or "# " or bold text with **)
+      if (line.trim().startsWith("#") || line.trim().startsWith("**")) {
+        let content = line.trim();
+        if (content.startsWith("#")) {
+          const level = content.match(/^#+/)[0].length;
+          content = content.substring(level + 1).trim();
+          return level <= 3 ? (
+            <h3 key={index} className="font-bold text-lg mt-4 mb-2">
+              {content}
+            </h3>
+          ) : (
+            <h4 key={index} className="font-semibold text-md mt-2 mb-1">
+              {content}
+            </h4>
+          );
+        } else if (content.startsWith("**") && content.endsWith("**")) {
+          content = content.substring(2, content.length - 2);
+          return (
+            <p key={index} className="font-bold mb-2">
+              {content}
+            </p>
+          );
+        }
+      }
+
+      // Handle emoji indicators
+      if (line.match(/^[📌📊📅📖🔥]/)) {
+        return (
+          <p key={index} className="mb-2 font-semibold">
+            {line}
+          </p>
+        );
+      }
+
       // Regular paragraph
       return (
         <p key={index} className="mb-2">
@@ -183,105 +292,184 @@ export default function QuestionScanner() {
   };
 
   // Generate and download PDF
-  const downloadPDF = () => {
-    if (!solution) {
-      addLog("Error: No solution available to download.");
+  const downloadPDF = (content, filename) => {
+    if (!content) {
+      addLog(`Error: No ${filename === "study-plan.pdf" ? "study plan" : "solution"} available to download.`);
       return;
     }
-    addLog("Generating and downloading PDF...");
+    addLog(`Generating and downloading ${filename}...`);
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("Question Solution", 10, 10);
+    doc.text(filename === "study-plan.pdf" ? "Smart Study Plan" : "Question Solution", 10, 10);
     doc.setFontSize(12);
-    doc.text(solution, 10, 20, { maxWidth: 180 });
-    doc.save("question-solution.pdf");
-    addLog("PDF downloaded successfully.");
+    doc.text(content, 10, 20, { maxWidth: 180 });
+    doc.save(filename);
+    addLog(`${filename} downloaded successfully.`);
   };
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      {/* Image Input Options */}
-      {!imageSrc && (
-        <div className="mb-4">
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-          <button
-            onClick={triggerFileInput}
-            className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 mr-2"
-          >
-            Upload Image
-          </button>
-          <button
-            onClick={startCamera}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Use Camera
-          </button>
-          <p className="text-sm text-gray-600 mt-2">
-            Upload an image or use your camera to scan a question.
-          </p>
-        </div>
-      )}
-
-      {/* Camera Preview */}
-      {!imageSrc && videoRef.current?.srcObject && (
-        <div className="mb-4">
-          <video ref={videoRef} className="w-full rounded-lg shadow-md" />
-          <button
-            onClick={captureImage}
-            className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Capture
-          </button>
-          <button
-            onClick={stopCamera}
-            className="mt-2 ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
-            Stop Camera
-          </button>
-          <canvas ref={canvasRef} className="hidden" />
-        </div>
-      )}
-
-      {/* Display Captured/Uploaded Image */}
-      {imageSrc && (
-        <div className="mb-4">
-          <img src={imageSrc} alt="Question" className="w-full rounded-lg shadow-md" />
-        </div>
-      )}
-
-      {/* Logs Display */}
-      <div className="mt-4 p-4 bg-gray-50 rounded-lg max-h-40 overflow-y-auto">
-        <h3 className="text-sm font-semibold">Progress Logs</h3>
-        {logs.length > 0 ? (
-          <ul className="text-xs text-gray-600">
-            {logs.map((log, index) => (
-              <li key={index}>{log}</li>
-            ))}
-          </ul>
-        ) : (
-          <p>No logs yet.</p>
-        )}
+      {/* Tab Navigation */}
+      <div className="flex mb-4 border-b">
+        <button
+          onClick={() => setActiveTab("scanner")}
+          className={`px-4 py-2 ${
+            activeTab === "scanner"
+              ? "border-b-2 border-blue-500 text-blue-600 font-semibold"
+              : "text-gray-600"
+          }`}
+        >
+          Question Scanner
+        </button>
+        <button
+          onClick={() => setActiveTab("planner")}
+          className={`px-4 py-2 ${
+            activeTab === "planner"
+              ? "border-b-2 border-blue-500 text-blue-600 font-semibold"
+              : "text-gray-600"
+          }`}
+        >
+          Smart Study Planner
+        </button>
       </div>
 
-      {/* Display Solution */}
-      {solution && (
-        <div className="mt-4 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-          <h3 className="text-xl font-bold text-gray-800 mb-4">Solution</h3>
-          <div className="text-gray-700 leading-relaxed">
-            {formatSolution(solution)}
+      {/* Question Scanner Section */}
+      {activeTab === "scanner" && (
+        <>
+          {/* Image Input Options */}
+          {!imageSrc && (
+            <div className="mb-4">
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                onClick={triggerFileInput}
+                className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 mr-2"
+              >
+                Upload Image
+              </button>
+              <button
+                onClick={startCamera}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Use Camera
+              </button>
+              <p className="text-sm text-gray-600 mt-2">
+                Upload an image or use your camera to scan a question.
+              </p>
+            </div>
+          )}
+
+          {/* Camera Preview */}
+          {!imageSrc && videoRef.current?.srcObject && (
+            <div className="mb-4">
+              <video ref={videoRef} className="w-full rounded-lg shadow-md" />
+              <button
+                onClick={captureImage}
+                className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                Capture
+              </button>
+              <button
+                onClick={stopCamera}
+                className="mt-2 ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+              >
+                Stop Camera
+              </button>
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+          )}
+
+          {/* Display Captured/Uploaded Image */}
+          {imageSrc && (
+            <div className="mb-4">
+              <img src={imageSrc} alt="Question" className="w-full rounded-lg shadow-md" />
+              <button
+                onClick={() => {
+                  setImageSrc(null);
+                  setSolution(null);
+                }}
+                className="mt-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Clear Image
+              </button>
+            </div>
+          )}
+
+          {/* Loading Indicator */}
+          {isLoading && (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <span className="ml-2">Generating solution...</span>
+            </div>
+          )}
+
+          {/* Display Solution */}
+          {solution && (
+            <div className="mt-4 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Solution</h3>
+              <div className="text-gray-700 leading-relaxed">
+                {formatText(solution)}
+              </div>
+              <button
+                onClick={() => downloadPDF(solution, "question-solution.pdf")}
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              >
+                Download Solution as PDF
+              </button>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Smart Study Planner Section */}
+      {activeTab === "planner" && (
+        <div>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200 mb-4">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">Smart Study Planner</h3>
+            <p className="text-gray-600 mb-4">
+              Get a personalized study plan based on your attendance and quiz performance. Our AI will analyze your data and create a tailored study schedule for the upcoming week.
+            </p>
+            <button
+              onClick={generateStudyPlan}
+              disabled={isPlanLoading}
+              className={`px-4 py-2 ${
+                isPlanLoading 
+                  ? "bg-gray-400" 
+                  : "bg-indigo-600 hover:bg-indigo-700"
+              } text-white rounded transition-colors`}
+            >
+              {isPlanLoading ? "Generating..." : "Generate Study Plan"}
+            </button>
           </div>
-          <button
-            onClick={downloadPDF}
-            className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-          >
-            Download Solution as PDF
-          </button>
+
+          {/* Loading Indicator */}
+          {isPlanLoading && (
+            <div className="flex items-center justify-center p-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              <span className="ml-2">Generating your study plan...</span>
+            </div>
+          )}
+
+          {/* Display Study Plan */}
+          {studyPlan && (
+            <div className="mt-4 p-6 bg-white rounded-lg shadow-md border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Your Personalized Study Plan</h3>
+              <div className="text-gray-700 leading-relaxed">
+                {formatText(studyPlan)}
+              </div>
+              <button
+                onClick={() => downloadPDF(studyPlan, "study-plan.pdf")}
+                className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              >
+                Download Study Plan as PDF
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
