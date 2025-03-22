@@ -13,28 +13,28 @@ export const getIceServers = async (req: Request, res: Response): Promise<void> 
     ];
     
     // If Twilio credentials are provided, use Twilio for TURN servers
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-      try {
-        const twilioClient = twilio(
-          process.env.TWILIO_ACCOUNT_SID,
-          process.env.TWILIO_AUTH_TOKEN
-        );
+    // if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+    //   try {
+    //     const twilioClient = twilio(
+    //       process.env.TWILIO_ACCOUNT_SID,
+    //       process.env.TWILIO_AUTH_TOKEN
+    //     );
         
-        const token = await twilioClient.tokens.create();
-        iceServers = token.iceServers;
-      } catch (twilioError) {
-        console.error('Failed to get Twilio ICE servers:', twilioError);
-        // Continue with public STUN servers only
-      }
-    } else {
-      // Add a free TURN server as fallback
-      // Note: For production, you should use your own TURN server or a service like Twilio
-      iceServers.push({
-        urls: 'turn:openrelay.metered.ca:80',
-        username: 'openrelayproject',
-        credential: 'openrelayproject',
-      });
-    }
+    //     const token = await twilioClient.tokens.create();
+    //     iceServers = token.iceServers;
+    //   } catch (twilioError) {
+    //     console.error('Failed to get Twilio ICE servers:', twilioError);
+    //     // Continue with public STUN servers only
+    //   }
+    // } else {
+    //   // Add a free TURN server as fallback
+    //   // Note: For production, you should use your own TURN server or a service like Twilio
+    //   iceServers.push({
+    //     urls: 'turn:openrelay.metered.ca:80',
+    //     username: 'openrelayproject',
+    //     credential: 'openrelayproject',
+    //   });
+    // }
     
     res.status(200).json({ iceServers });
   } catch (error) {

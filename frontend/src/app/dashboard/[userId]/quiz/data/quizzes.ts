@@ -482,5 +482,169 @@ export const quizzes: QuizSchedule[] = [
         correctAnswer: 'flex-grow'
       }
     ]
+  },  
+  {
+    id: 'quiz-6',
+    name: 'Java Fundamentals',
+    description: 'Test your knowledge of Java basics including OOP, data types, and control structures.',
+    scheduledDate: today,
+    duration: 30,
+    questions: [
+      {
+        id: 'java-1',
+        text: 'Which keyword is used to define a class in Java?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['class', 'Class', 'define', 'struct'],
+        correctAnswer: 'class'
+      },
+      {
+        id: 'java-2',
+        text: 'Which data type is used to store a single character in Java?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: 'char'
+      },
+      {
+        id: 'java-3',
+        text: 'What is the default value of a boolean variable in Java?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['true', 'false', '0', 'null'],
+        correctAnswer: 'false'
+      },
+      {
+        id: 'java-4',
+        text: 'Which method is called automatically when an object is created?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: 'constructor'
+      },
+      {
+        id: 'java-5',
+        text: 'What is the keyword used for inheritance in Java?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['extends', 'implements', 'inherits', 'derives'],
+        correctAnswer: 'extends'
+      },
+      {
+        id: 'java-6',
+        text: 'What is the main purpose of the "final" keyword in Java?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: [
+          'To define a constant',
+          'To mark a method that cannot be overridden',
+          'To prevent class inheritance',
+          'All of the above'
+        ],
+        correctAnswer: 'All of the above'
+      },
+      {
+        id: 'java-7',
+        text: 'Which package is imported by default in every Java program?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: 'java.lang'
+      },
+      {
+        id: 'java-8',
+        text: 'Which exception is thrown when a division by zero occurs in Java?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['ArithmeticException', 'NullPointerException', 'IOException', 'RuntimeException'],
+        correctAnswer: 'ArithmeticException'
+      },
+      {
+        id: 'java-9',
+        text: 'What is the return type of the "main" method in Java?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: 'void'
+      },
+      {
+        id: 'java-10',
+        text: 'Which collection type does not allow duplicate elements?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['List', 'Set', 'Map', 'Queue'],
+        correctAnswer: 'Set'
+      }
+    ]
+  },
+  {
+    id: 'quiz-7',
+    name: 'Python Fundamentals',
+    description: 'Test your understanding of Python syntax, data structures, and core concepts.',
+    scheduledDate: addDays(today, 1),
+    duration: 30,
+    questions: [
+      {
+        id: 'python-1',
+        text: 'Which symbol is used for single-line comments in Python?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: '#'
+      },
+      {
+        id: 'python-2',
+        text: 'What is the output of: print(type([]))?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: "<class 'list'>"
+      },
+      {
+        id: 'python-3',
+        text: 'Which keyword is used to define a function in Python?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['func', 'def', 'define', 'function'],
+        correctAnswer: 'def'
+      },
+      {
+        id: 'python-4',
+        text: 'Which data structure does not allow duplicate values?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['List', 'Tuple', 'Set', 'Dictionary'],
+        correctAnswer: 'Set'
+      },
+      {
+        id: 'python-5',
+        text: 'What is the correct way to open a file in Python for reading?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: "open('filename', 'r')"
+      },
+      {
+        id: 'python-6',
+        text: 'Which built-in function returns the length of an object?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: 'len'
+      },
+      {
+        id: 'python-7',
+        text: 'How do you create a dictionary in Python?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: [
+          "dict = {'key': 'value'}",
+          "dict = ['key', 'value']",
+          "dict = ('key', 'value')",
+          "dict = {'key', ['value']}"
+        ],
+        correctAnswer: "dict = {'key': 'value'}"
+      },
+      {
+        id: 'python-8',
+        text: 'Which Python library is commonly used for data analysis?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: ['NumPy', 'Django', 'Flask', 'Matplotlib'],
+        correctAnswer: 'NumPy'
+      },
+      {
+        id: 'python-9',
+        text: 'What does the "pass" statement do in Python?',
+        type: QuestionType.MULTIPLE_CHOICE,
+        options: [
+          'Skips the rest of the loop',
+          'Defines a placeholder for future code',
+          'Terminates the function',
+          'Repeats the last statement'
+        ],
+        correctAnswer: 'Defines a placeholder for future code'
+      },
+      {
+        id: 'python-10',
+        text: 'What will be the output of: print(bool(""))?',
+        type: QuestionType.TEXT_INPUT,
+        correctAnswer: 'False'
+      }
+    ]
   }
 ];
