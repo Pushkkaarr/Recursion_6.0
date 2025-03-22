@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // Add this import at the top
 import { usePathname } from 'next/navigation';
+// import { FaFirefoxBrowser } from "react-icons/fa6";
 
 import {
   BarChart3,
@@ -19,6 +20,8 @@ import {
   Settings,
   Users,
   X,
+  Chrome,
+  Bot
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -90,11 +93,11 @@ const pathname = usePathname();
       href: `/dashboard/${userId}/analytics`,
       icon: <BarChart3 size={20} />,
     },
-    // {
-    //   title: 'Community',
-    //   href: `/dashboard/${userId}/community`,
-    //   icon: <Users size={20} />,
-    // },
+    {
+      title: 'Daily Quizzes',
+      href: `/dashboard/${userId}/quiz`,
+      icon: <Users size={20} />,
+    },
     {
       title: 'Messages',
       href: `/dashboard/${userId}/messages`,
@@ -103,8 +106,13 @@ const pathname = usePathname();
     {
       title: 'Browse courses',
       href: `/dashboard/${userId}/browse`,
-      icon: <MessageSquare size={20} />,
+      icon: <Chrome size={20} />,
     },
+    {
+        title: 'AI Quiz',
+        href: `/dashboard/${userId}/aiQuiz`,
+        icon: <Bot size={20} />,
+      },
   ];
 
   return (

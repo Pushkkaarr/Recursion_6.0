@@ -6,6 +6,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Toolti
 import { Bell, BookOpen, CheckCircle2, Users, FileText, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link"; // Use Next.js Link
+import MonitoringPanel from "@/components/MonitoringPanel";
+import ProctoringMonitor from "@/components/ProctoringMonitor";
 
 // Sample data for charts and tables
 const performanceData = [
@@ -231,7 +233,6 @@ export default function TeacherDashboard() {
             </Table>
           </CardContent>
         </Card>
-
         {/* Upcoming Quizzes */}
         <Card>
           <CardHeader>
@@ -263,6 +264,13 @@ export default function TeacherDashboard() {
                 <Link href="/teacher/quizzes">View All Quizzes</Link>
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Activity detection */}
+        <Card className="lg:col-span-3">
+          <CardContent>
+          <ProctoringMonitor />
           </CardContent>
         </Card>
       </div>

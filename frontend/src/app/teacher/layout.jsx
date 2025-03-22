@@ -30,7 +30,7 @@ export default function TeacherDashboardLayout({ children }) {
     { title: "Students", href: "/teacher/students", icon: <Users size={20} /> },
     { title: "Quizzes", href: "/teacher/quizzes", icon: <FileText size={20} /> },
     { title: "Content", href: "/teacher/content", icon: <BookOpen size={20} /> },
-    { title: "Live Meetings", href: "/teacher/meetings", icon: <Video size={20} /> },
+    { title: "Live Meetings", href: "/teacher/meeting", icon: <Video size={20} /> },
   ];
 
   return (
