@@ -32,12 +32,13 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Connect to WebSocket
   useEffect(() => {
-    const newSocket = io(`${process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:5000'}`);
+    const newSocket = io(`${process.env.NEXT_PUBLIC_WS_URL || 'https://192.168.1.223:5001'}`);
     
     newSocket.on('connect', () => {
       console.log('Connected to WebSocket');
@@ -45,6 +46,7 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
     });
     
     newSocket.on('newMessage', (newMessage: Message) => {
+      console.log('Received new message via WebSocket:', newMessage);
       setMessages(prev => [...prev, newMessage]);
     });
     
@@ -167,22 +169,27 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
     }
   };
   
-  const handleFileUpload = async () => {
-    if (!fileInputRef.current?.files?.length) return;
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
     
-    const file = fileInputRef.current.files[0];
+    const file = e.target.files[0];
     const formData = new FormData();
     formData.append('file', file);
     formData.append('senderName', username);
-    
-    // Only include isGuest flag, not senderId
     formData.append('isGuest', String(isGuest));
     
+    // Add a caption/content for the media
+    const fileType = file.type.startsWith('image/') ? 'image' : 
+                    file.type.startsWith('video/') ? 'video' : 'file';
+    formData.append('content', `Shared a ${fileType}: ${file.name}`);
+    
     try {
-      setIsSending(true);
+      setUploadingFile(true);
       
       // Get auth token if user is logged in
       const token = !isGuest ? localStorage.getItem('token') : null;
+      
+      console.log(`Uploading ${fileType}:`, file.name);
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/messages/${channelId}/media`, {
         method: 'POST',
@@ -200,17 +207,24 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
         throw new Error(`Failed to upload file: ${response.statusText}`);
       }
       
+      const uploadedMessage = await response.json();
+      console.log('File uploaded successfully:', uploadedMessage);
+      
       // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
       
-      toast.success('File uploaded successfully!');
-      setIsSending(false);
+      toast.success(`${fileType} uploaded successfully!`);
+      setUploadingFile(false);
+      
+      // WebSocket will handle adding the message to all clients, but we can also
+      // add it locally to avoid delay
+      // setMessages(prev => [...prev, uploadedMessage]);
     } catch (error) {
       console.error('Error uploading file:', error);
       toast.error('Failed to upload file. Please try again.');
-      setIsSending(false);
+      setUploadingFile(false);
     }
   };
   
@@ -252,158 +266,242 @@ export default function TextChannel({ channelId, channelName, username, isGuest,
     messagesByDate[dateStr].push(message);
   });
   
+  // Rendering media content based on type
+  const renderMediaContent = (msg: Message) => {
+    if (!msg.mediaType || !msg.mediaUrl) return null;
+    
+    switch (msg.mediaType) {
+      case 'image':
+        return (
+          <div className="mt-2">
+            <img 
+              src={msg.mediaUrl} 
+              alt="Shared image"
+              className="max-w-md max-h-64 rounded-lg border border-gray-200 shadow-sm object-contain cursor-pointer"
+              onClick={() => window.open(msg.mediaUrl, '_blank')}
+              loading="lazy"
+            />
+          </div>
+        );
+      case 'video':
+        return (
+          <div className="mt-2">
+            <video 
+              controls
+              className="max-w-md max-h-64 rounded-lg border border-gray-200 shadow-sm"
+            >
+              <source src={msg.mediaUrl} />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        );
+      case 'file':
+        return (
+          <div className="mt-2">
+            <a 
+              href={msg.mediaUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 text-blue-600 hover:bg-gray-100"
+            >
+              <Paperclip size={16} className="mr-2" />
+              <span>Download File</span>
+            </a>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+  
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background/40 backdrop-blur-sm">
       {/* Channel Header */}
-      <div className="h-14 flex items-center px-4 border-b border-gray-200 bg-white shadow-sm">
+      <div className="h-16 flex items-center px-6 border-b border-border/60 bg-background/80 backdrop-blur-sm sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
         <div className="flex items-center">
-          <PenLine size={18} className="text-blue-500 mr-2" />
-          <h2 className="font-medium">{channelName}</h2>
+          <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center text-primary mr-3">
+            <PenLine size={16} className="stroke-primary" />
+          </div>
+          <h2 className="font-semibold text-lg text-foreground"># {channelName}</h2>
+        </div>
+        <div className="ml-auto text-sm text-muted-foreground">
+          {isGuest ? (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-200 dark:border-yellow-800/30">
+              <User size={12} className="mr-1" />
+              Guest Mode
+            </span>
+          ) : (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800/30">
+              <User size={12} className="mr-1" />
+              Connected
+            </span>
+          )}
         </div>
       </div>
       
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-700 scrollbar-track-transparent space-y-6">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
-            <Loader className="animate-spin text-blue-500" />
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative w-12 h-12">
+                <div className="absolute inset-0 rounded-full border-t-2 border-primary animate-spin"></div>
+                <div className="absolute inset-2 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center">
+                  <Loader size={20} className="text-primary" />
+                </div>
+              </div>
+              <p className="text-muted-foreground text-sm font-medium">Loading messages...</p>
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col justify-center items-center h-full text-muted-foreground">
+            <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+              <PenLine size={24} className="text-muted-foreground/50" />
+            </div>
+            <p className="text-lg mb-1 font-medium">No messages yet</p>
+            <p className="text-sm max-w-xs text-center">Start the conversation by sending the first message in this channel!</p>
           </div>
         ) : (
           <>
             {Object.entries(messagesByDate).map(([date, dateMessages]) => (
-              <div key={date} className="mb-6">
-                <div className="flex items-center mb-4">
-                  <div className="h-px bg-gray-200 flex-1"></div>
-                  <span className="px-2 text-xs font-medium text-gray-500">{date}</span>
-                  <div className="h-px bg-gray-200 flex-1"></div>
+              <div key={date} className="space-y-5">
+                <div className="flex items-center mb-6">
+                  <div className="h-px bg-border/40 flex-1"></div>
+                  <span className="px-3 py-1 text-xs font-medium text-muted-foreground bg-background/80 rounded-full mx-2 shadow-sm backdrop-blur-sm border border-border/10">
+                    {date}
+                  </span>
+                  <div className="h-px bg-border/40 flex-1"></div>
                 </div>
                 
                 {dateMessages.map(msg => (
-                  <div key={msg._id} className="mb-4 flex items-start">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-medium mr-3 mt-1">
-                      {msg.sender.name === 'System' ? 
-                        <User size={16} /> : 
-                        msg.sender.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-baseline">
-                        <span className="font-medium mr-2">{msg.sender.name}</span>
-                        {msg.sender.isGuest && (
-                          <span className="text-xs text-gray-500 mr-2">(Guest)</span>
-                        )}
-                        <span className="text-xs text-gray-500">{formatMessageTime(msg.createdAt)}</span>
+                  <div key={msg._id} className="group pl-2 hover:bg-muted/20 py-2 -mx-2 px-2 rounded-lg transition-colors duration-200 space-y-1">
+                    <div className="flex items-start">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium mr-3 mt-0.5 border border-primary/5 shadow-sm ring-2 ring-background">
+                        {msg.sender.name === 'System' ? 
+                          <User size={16} /> : 
+                          msg.sender.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="mt-1">
-                        {!msg.mediaType && (
-                          <p className="text-gray-800">{msg.content}</p>
-                        )}
-                        
-                        {msg.mediaType === 'image' && msg.mediaUrl && (
-                          <div>
-                            <p className="text-gray-600 text-sm mb-1">{msg.content}</p>
-                            <img 
-                              src={msg.mediaUrl} 
-                              alt="Shared"
-                              className="max-w-md rounded-lg border border-gray-200 shadow-sm"
-                            />
-                          </div>
-                        )}
-                        
-                        {msg.mediaType === 'video' && msg.mediaUrl && (
-                          <div>
-                            <p className="text-gray-600 text-sm mb-1">{msg.content}</p>
-                            <video 
-                              controls
-                              className="max-w-md rounded-lg border border-gray-200 shadow-sm"
-                            >
-                              <source src={msg.mediaUrl} />
-                              Your browser does not support the video tag.
-                            </video>
-                          </div>
-                        )}
-                        
-                        {msg.mediaType === 'file' && msg.mediaUrl && (
-                          <div>
-                            <p className="text-gray-600 text-sm mb-1">{msg.content}</p>
-                            <a 
-                              href={msg.mediaUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="flex items-center p-2 bg-gray-50 rounded-md border border-gray-200 text-blue-600 hover:bg-gray-100"
-                            >
-                              <Paperclip size={16} className="mr-2" />
-                              <span>Download File</span>
-                            </a>
-                          </div>
-                        )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline flex-wrap gap-1.5">
+                          <span className="font-semibold text-foreground">
+                            {msg.sender.name}
+                          </span>
+                          {msg.sender.isGuest && (
+                            <span className="text-xs px-1.5 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded">
+                              Guest
+                            </span>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {formatMessageTime(msg.createdAt)}
+                          </span>
+                        </div>
+                        <div className="mt-1 text-foreground/90 break-words">
+                          <p className="leading-relaxed">{msg.content}</p>
+                          {msg.mediaType === 'image' && msg.mediaUrl && (
+                            <div className="mt-2 group/img relative">
+                              <img 
+                                src={msg.mediaUrl} 
+                                alt="Shared image"
+                                className="max-w-xs sm:max-w-sm md:max-w-md max-h-64 rounded-lg border border-border shadow-md object-contain cursor-pointer transition-transform duration-300 hover:scale-[1.02]"
+                                onClick={() => window.open(msg.mediaUrl, '_blank')}
+                                loading="lazy"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity rounded-lg pointer-events-none"></div>
+                            </div>
+                          )}
+                          {msg.mediaType === 'video' && msg.mediaUrl && (
+                            <div className="mt-2 overflow-hidden rounded-lg border border-border shadow-md">
+                              <video 
+                                controls
+                                className="max-w-xs sm:max-w-sm md:max-w-md max-h-64"
+                              >
+                                <source src={msg.mediaUrl} />
+                                Your browser does not support the video tag.
+                              </video>
+                            </div>
+                          )}
+                          {msg.mediaType === 'file' && msg.mediaUrl && (
+                            <div className="mt-2">
+                              <a 
+                                href={msg.mediaUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center p-2.5 bg-primary/5 rounded-md border border-primary/10 text-primary hover:bg-primary/10 transition-colors shadow-sm"
+                              >
+                                <Paperclip size={16} className="mr-2 flex-shrink-0" />
+                                <span>Download File</span>
+                              </a>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ))}
-            <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} className="h-4" />
           </>
         )}
       </div>
       
       {/* Input Area */}
-      <div className="p-3 bg-white border-t border-gray-200">
-        <form onSubmit={handleSendMessage} className="flex items-center">
-          <div className="flex space-x-2 mr-2">
-            <button 
-              type="button" 
-              className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Image size={20} />
-            </button>
-            <button 
-              type="button" 
-              className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Film size={20} />
-            </button>
-            <button 
-              type="button" 
-              className="p-2 rounded-full hover:bg-gray-100 text-gray-500"
-              onClick={() => fileInputRef.current?.click()}
+      <div className="p-4 bg-background/80 backdrop-blur-sm border-t border-border/60 shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+        <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <label 
+              className="p-2.5 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors cursor-pointer relative"
+              htmlFor="mediaUpload"
             >
               <Paperclip size={20} />
-            </button>
-            <input 
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={handleFileUpload}
-              accept="image/*,video/*,application/pdf"
+              <input 
+                id="mediaUpload"
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                onChange={handleFileUpload}
+                accept="image/*,video/*,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                disabled={uploadingFile}
+              />
+              {uploadingFile && (
+                <span className="absolute inset-0 flex items-center justify-center bg-background/30 rounded-full backdrop-blur-sm">
+                  <Loader size={20} className="animate-spin text-primary" />
+                </span>
+              )}
+            </label>
+          </div>
+          
+          <div className="relative flex-1">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={`Message #${channelName}`}
+              className="w-full p-3 rounded-lg bg-muted/50 border border-border/60 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+              disabled={isSending || uploadingFile}
             />
           </div>
           
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder={`Message #${channelName}`}
-            className="flex-1 p-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={isSending}
-          />
-          
-          <div className="flex ml-2 space-x-2">
-            <button type="button" className="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+          <div className="flex gap-1">
+            <button 
+              type="button" 
+              className="p-2.5 rounded-full hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+            >
               <Smile size={20} />
             </button>
             <button 
               type="submit" 
-              className={`p-2 rounded-full ${
-                isSending || !message.trim() 
-                  ? 'bg-gray-300 cursor-not-allowed' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              className={`p-2.5 rounded-full transition-all ${
+                isSending || uploadingFile || !message.trim() 
+                  ? 'bg-primary/30 text-primary-foreground/70 cursor-not-allowed' 
+                  : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-md'
               }`}
-              disabled={isSending || !message.trim()}
+              disabled={isSending || uploadingFile || !message.trim()}
             >
-              {isSending ? <Loader size={20} className="animate-spin" /> : <Send size={20} />}
+              {isSending ? 
+                <Loader size={20} className="animate-spin" /> : 
+                <Send size={20} />
+              }
             </button>
           </div>
         </form>

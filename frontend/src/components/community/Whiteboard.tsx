@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import * as fabric from 'fabric';
 import { Socket } from 'socket.io-client';
-import { Undo, Redo, Circle, Square, Type, Pencil, Image as ImageIcon, Trash, Download, Save } from 'lucide-react';
+import { Undo, Redo, Circle, Square, Type, Pencil, Image as ImageIcon, Trash, Download, Save, Loader2, BookOpen } from 'lucide-react';
 
 interface WhiteboardProps {
   channelId: string;
@@ -18,15 +18,15 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
   const [brushSize, setBrushSize] = useState(3);
   const [tool, setTool] = useState<'pencil' | 'rect' | 'circle' | 'text'>('pencil');
   const [isDrawing, setIsDrawing] = useState(false);
-  
+  const [isSolving, setIsSolving] = useState(false);
+  const [solution, setSolution] = useState<string | null>(null);
+
   // Initialize canvas with proper dimensions
   useEffect(() => {
     if (canvasRef.current && containerRef.current && !canvas) {
-      // Get the dimensions of the container
       const containerWidth = containerRef.current.clientWidth;
       const containerHeight = containerRef.current.clientHeight;
       
-      // Create a canvas with the full size of the container
       const fabricCanvas = new fabric.Canvas(canvasRef.current, {
         isDrawingMode: true,
         width: containerWidth,
@@ -36,12 +36,10 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
       
       setCanvas(fabricCanvas);
       
-      // Set initial brush
       fabricCanvas.freeDrawingBrush = new fabric.PencilBrush(fabricCanvas);
       fabricCanvas.freeDrawingBrush.color = color;
       fabricCanvas.freeDrawingBrush.width = brushSize;
       
-      // Handle resize to ensure canvas fills the container
       const handleResize = () => {
         if (containerRef.current) {
           const width = containerRef.current.clientWidth;
@@ -55,18 +53,14 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
       
       window.addEventListener('resize', handleResize);
       
-      // Collaborative features - listen to socket events
       if (socket) {
-        // Listen for updates from other users
         socket.on(`whiteboard:${channelId}:update`, (data: string) => {
-          // Temporarily disable event emission to prevent infinite loops
           const emitEvents = fabricCanvas.__eventListeners['object:modified'] || [];
           fabricCanvas.__eventListeners['object:modified'] = [];
           
           try {
             fabricCanvas.loadFromJSON(data, () => {
               fabricCanvas.renderAll();
-              // Restore event listeners
               fabricCanvas.__eventListeners['object:modified'] = emitEvents;
             });
           } catch (err) {
@@ -75,14 +69,10 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
           }
         });
         
-        // Let other users know someone joined
         socket.emit('whiteboard:join', channelId);
-        
-        // Request latest canvas state
         socket.emit('whiteboard:requestState', channelId);
       }
       
-      // Setup object modification and path creation events
       const emitCanvasChange = () => {
         if (socket) {
           socket.emit('whiteboard:update', {
@@ -97,7 +87,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
       fabricCanvas.on('object:removed', emitCanvasChange);
       fabricCanvas.on('path:created', emitCanvasChange);
       
-      // Clean up
       return () => {
         window.removeEventListener('resize', handleResize);
         fabricCanvas.dispose();
@@ -109,7 +98,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     }
   }, [canvasRef, containerRef, socket, channelId]);
   
-  // Update brush when color or size changes
   useEffect(() => {
     if (canvas && canvas.freeDrawingBrush) {
       canvas.freeDrawingBrush.color = color;
@@ -117,7 +105,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     }
   }, [canvas, color, brushSize]);
   
-  // Handle tool change
   useEffect(() => {
     if (!canvas) return;
     
@@ -128,7 +115,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     }
   }, [canvas, tool]);
   
-  // Add shape
   const addShape = (shape: 'rect' | 'circle') => {
     if (!canvas) return;
     
@@ -158,7 +144,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     }
   };
   
-  // Add text
   const addText = () => {
     if (!canvas) return;
     
@@ -175,7 +160,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     canvas.renderAll();
   };
   
-  // Clear canvas
   const clearCanvas = () => {
     if (!canvas) return;
     
@@ -195,7 +179,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     }
   };
   
-  // Download canvas as image
   const downloadCanvas = () => {
     if (!canvas) return;
     
@@ -203,7 +186,7 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
       const dataURL = canvas.toDataURL({
         format: 'png',
         quality: 1,
-        multiplier: 2, // Increased quality for better resolution
+        multiplier: 2,
       });
       
       const link = document.createElement('a');
@@ -217,7 +200,6 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
     }
   };
   
-  // Save canvas state
   const saveCanvas = () => {
     if (!canvas || !socket) return;
     
@@ -230,76 +212,177 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
       console.error('Error saving canvas:', err);
     }
   };
-  
+
+  // New function to solve whiteboard content using Gemini API
+  const solveWhiteboard = async () => {
+    if (!canvas) return;
+
+    setIsSolving(true);
+    setSolution(null);
+
+    try {
+      // Capture whiteboard as image
+      const dataURL = canvas.toDataURL({
+        format: 'png',
+        quality: 1,
+        multiplier: 2,
+      });
+
+      // Convert to base64
+      const base64Image = dataURL.split(',')[1];
+
+      // Send to Gemini API
+      const response = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": process.env.NEXT_PUBLIC_GEMINI_API_KEY || "", // Ensure you set this in your .env
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    inlineData: {
+                      mimeType: "image/png",
+                      data: base64Image,
+                    },
+                  },
+                  {
+                    text: "Analyze the image and solve any mathematical or logical problems shown. Provide a concise answer.",
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+        throw new Error("Invalid response from Gemini API.");
+      }
+
+      const generatedSolution = data.candidates[0].content.parts[0].text;
+      setSolution(generatedSolution);
+    } catch (error) {
+      console.error('Error solving whiteboard:', error);
+      setSolution("Failed to generate solution. Please try again.");
+    } finally {
+      setIsSolving(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-2 bg-white border-b flex items-center justify-between">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+      <div className="p-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <button 
-            className={`p-2 rounded ${tool === 'pencil' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+            className={`p-2 rounded-md transition-all duration-200 ${
+              tool === 'pencil' 
+                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
             onClick={() => setTool('pencil')}
+            title="Pencil Tool"
           >
-            <Pencil size={20} />
+            <Pencil size={20} strokeWidth={1.5} />
           </button>
           <button 
-            className={`p-2 rounded ${tool === 'rect' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+            className={`p-2 rounded-md transition-all duration-200 ${
+              tool === 'rect' 
+                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
             onClick={() => {
               setTool('rect');
               addShape('rect');
             }}
+            title="Rectangle Tool"
           >
-            <Square size={20} />
+            <Square size={20} strokeWidth={1.5} />
           </button>
           <button 
-            className={`p-2 rounded ${tool === 'circle' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+            className={`p-2 rounded-md transition-all duration-200 ${
+              tool === 'circle' 
+                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
             onClick={() => {
               setTool('circle');
               addShape('circle');
             }}
+            title="Circle Tool"
           >
-            <Circle size={20} />
+            <Circle size={20} strokeWidth={1.5} />
           </button>
           <button 
-            className={`p-2 rounded ${tool === 'text' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
+            className={`p-2 rounded-md transition-all duration-200 ${
+              tool === 'text' 
+                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400' 
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+            }`}
             onClick={() => {
               setTool('text');
               addText();
             }}
+            title="Text Tool"
           >
-            <Type size={20} />
+            <Type size={20} strokeWidth={1.5} />
           </button>
-          <div className="h-6 w-px bg-gray-300 mx-1"></div>
-          <input 
-            type="color" 
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-8 h-8 rounded cursor-pointer"
-          />
-          <div className="flex items-center">
-            <span className="text-xs mr-1">{brushSize}px</span>
+          <div className="h-8 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
+          <div className="group relative">
+            <input 
+              type="color" 
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="w-8 h-8 rounded-full cursor-pointer border-2 border-gray-200 dark:border-gray-700 overflow-hidden"
+              style={{ backgroundColor: color }}
+              title="Select Color"
+            />
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800" style={{ backgroundColor: color }}></div>
+          </div>
+          <div className="flex items-center px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mr-2 w-8 text-center">{brushSize}px</span>
             <input 
               type="range" 
               min="1" 
               max="30" 
               value={brushSize}
               onChange={(e) => setBrushSize(parseInt(e.target.value))}
-              className="w-24"
+              className="w-28 h-2 appearance-none bg-gray-200 dark:bg-gray-700 rounded-full outline-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-indigo-500 [&::-webkit-slider-thumb]:cursor-pointer"
+              title="Brush Size"
             />
           </div>
         </div>
         
         <div className="flex items-center space-x-2">
-          <button className="p-2 rounded hover:bg-gray-100" onClick={clearCanvas}>
-            <Trash size={20} />
-          </button>
-          <button className="p-2 rounded hover:bg-gray-100" onClick={downloadCanvas}>
-            <Download size={20} />
+          <button 
+            className="p-2 rounded-md hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 text-gray-700 dark:text-gray-300 transition-colors duration-200" 
+            onClick={clearCanvas}
+            title="Clear Canvas"
+          >
+            <Trash size={20} strokeWidth={1.5} />
           </button>
           <button 
-            className="p-2 rounded bg-blue-500 hover:bg-blue-600 text-white flex items-center"
-            onClick={saveCanvas}
+            className="p-2 rounded-md hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/30 dark:hover:text-blue-400 text-gray-700 dark:text-gray-300 transition-colors duration-200" 
+            onClick={downloadCanvas}
+            title="Download"
           >
-            <Save size={20} className="mr-1" />
+            <Download size={20} strokeWidth={1.5} />
+          </button>
+          <button 
+            className="flex items-center px-3 py-2 rounded-md bg-indigo-500 hover:bg-indigo-600 text-white font-medium shadow-sm transition-colors duration-200"
+            onClick={saveCanvas}
+            title="Save"
+          >
+            <Save size={18} strokeWidth={1.5} className="mr-2" />
             <span>Save</span>
           </button>
         </div>
@@ -307,10 +390,42 @@ export default function Whiteboard({ channelId, socket }: WhiteboardProps) {
       
       <div 
         ref={containerRef} 
-        className="flex-1 relative overflow-hidden bg-gray-50"
-        style={{ height: 'calc(100vh - 60px)' }} // Set an explicit height
+        className="flex-1 relative overflow-hidden bg-gray-50 dark:bg-gray-800"
+        style={{ height: 'calc(100vh - 60px)' }}
       >
         <canvas ref={canvasRef} />
+        
+        {/* Solve Button in Bottom Right */}
+        <button
+          className="absolute bottom-6 right-6 p-3.5 bg-gradient-to-br from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-full shadow-lg flex items-center justify-center transform transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-50 dark:focus:ring-green-500"
+          onClick={solveWhiteboard}
+          disabled={isSolving}
+          title="Solve"
+        >
+          {isSolving ? (
+            <Loader2 size={24} className="animate-spin" />
+          ) : (
+            <BookOpen size={24} />
+          )}
+        </button>
+
+        {/* Solution Overlay */}
+        {solution && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-gray-700 animate-fadeIn">
+              <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Solution</h3>
+              <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg mb-4 whitespace-pre-wrap text-gray-700 dark:text-gray-300 font-mono text-sm border border-gray-100 dark:border-gray-700 max-h-[70vh] overflow-y-auto">
+                {solution}
+              </div>
+              <button
+                className="w-full p-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-md font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50"
+                onClick={() => setSolution(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

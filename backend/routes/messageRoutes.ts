@@ -1,18 +1,33 @@
-
 import express from 'express';
 import multer from 'multer';
 import * as messageController from '../controllers/messageController';
+import fs from 'fs';
+import path from 'path';
 
 const router = express.Router();
+
+// Use an absolute path for the uploads directory
+const uploadDir = path.resolve(process.cwd(), 'uploads');
+console.log('Upload directory path:', uploadDir);
+
+// Ensure uploads directory exists
+if (!fs.existsSync(uploadDir)) {
+  try {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log('Created uploads directory at:', uploadDir);
+  } catch (error) {
+    console.error('Failed to create uploads directory:', error);
+  }
+}
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, '/tmp/'); // Temporary storage before uploading to Cloudinary
+    cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    cb(null, new Date().toISOString() + '-' + file.originalname);
-  }
+    cb(null, new Date().toISOString().replace(/:/g, '-') + '-' + file.originalname);
+  },
 });
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -30,12 +45,12 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
   }
 };
 
-const upload = multer({ 
+const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 1024 * 1024 * 20 // 20MB limit
+    fileSize: 1024 * 1024 * 20, // 20MB limit
   },
-  fileFilter: fileFilter
+  fileFilter: fileFilter,
 });
 
 // Message routes
